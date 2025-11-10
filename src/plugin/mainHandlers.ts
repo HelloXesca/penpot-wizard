@@ -109,3 +109,14 @@ export async function handleAddImage(payload: AddImageQueryPayload) : Promise<Pl
     }
   }
 }
+
+export function getCurrentTheme(): PluginResponseMessage {
+  return {
+    source: MessageSourceName.Plugin,
+    type: ClientQueryType.GET_CURRENT_THEME,
+    messageId: '',
+    message: 'current theme',
+    success: true,
+    payload: { theme: penpot.theme },
+  } as PluginResponseMessage;
+}

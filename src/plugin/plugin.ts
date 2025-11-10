@@ -9,7 +9,7 @@ import {
 } from '../types/types';
 
 import { handleDrawShape } from './drawHandlers';
-import { handleGetProjectData, handleGetUserData, handleAddImage, getCurrentPage, getAvailableFonts } from './mainHandlers';
+import { handleGetProjectData, handleGetUserData, handleAddImage, getCurrentPage, getAvailableFonts, getCurrentTheme } from './mainHandlers';
 
 console.log('AI Agent Chat Plugin loaded successfully!')
 
@@ -59,6 +59,10 @@ penpot.ui.onMessage(async (message: ClientMessage) => {
 
     case ClientQueryType.GET_CURRENT_PAGE:
       responseMessage = getCurrentPage();
+      break;
+
+    case ClientQueryType.GET_CURRENT_THEME:
+      responseMessage = getCurrentTheme();
       break;
 
     default:
