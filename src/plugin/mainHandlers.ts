@@ -105,7 +105,7 @@ export async function handleAddImage(payload: AddImageQueryPayload) : Promise<Pl
     return {
       ...pluginResponse,
       success: false,
-      message: `Error adding image ${name}: ${error instanceof Error ? error.message : String(error)}`,
+      message: `error adding image ${name}: ${error}`,
     }
   }
 }
