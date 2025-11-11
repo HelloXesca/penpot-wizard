@@ -51,6 +51,18 @@ export const functionTools: FunctionTool[] = [
       const response = await sendMessageToPlugin(ClientQueryType.GET_CURRENT_PAGE, undefined);
       return response;
     },
+  },{
+    id: "get-file-versions",
+    name: "getFileVersions",
+    description: `
+      Use this tool to get the version history of the current Penpot file.
+      It returns all versions including their labels, IDs, and whether they are autosaves.
+    `,
+    inputSchema: z.object({}),
+    function: async () => {
+      const response = await sendMessageToPlugin(ClientQueryType.GET_FILE_VERSIONS, undefined);
+      return response;
+    },
   },
 ];
 
