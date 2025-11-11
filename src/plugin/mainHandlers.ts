@@ -105,7 +105,59 @@ export async function handleAddImage(payload: AddImageQueryPayload) : Promise<Pl
     return {
       ...pluginResponse,
       success: false,
-      message: `error adding image ${name}: ${error}`,
+      message: `Error adding image ${name}: ${error instanceof Error ? error.message : String(error)}`,
     }
+  }
+}
+
+export async function getFileVersions(): Promise<PluginResponseMessage> {
+  try {
+    console.log('getFileVersions called');
+
+    if (!penpot.currentFile) {
+      throw new Error('No current file available');
+    }
+
+    if (!penpot.currentFile.findVersions) {
+      throw new Error('findVersions API not available');
+    }
+
+    const versions = await penpot.currentFile.findVersions();
+    console.log('Raw versions data:', versions);
+
+    const processedVersions = versions.map((version: { id?: string; label?: string; isAutosave?: boolean; createdAt?: unknown }) => ({
+      id: version.id || '',
+      label: version.label || '',
+      isAutosave: version.isAutosave || false,
+      createdAt: null,
+    }));
+
+    const responsePayload = {
+      versions: processedVersions,
+      totalVersions: processedVersions.length,
+      displayedVersions: processedVersions.length,
+      hasMoreVersions: false,
+    };
+
+    console.log('Processed versions payload:', responsePayload);
+
+    return {
+      source: MessageSourceName.Plugin,
+      type: ClientQueryType.GET_FILE_VERSIONS,
+      messageId: '',
+      message: 'File versions retrieved successfully',
+      success: true,
+      payload: responsePayload,
+    };
+
+  } catch (error) {
+    console.error('Error in getFileVersions:', error);
+    return {
+      source: MessageSourceName.Plugin,
+      type: ClientQueryType.GET_FILE_VERSIONS,
+      messageId: '',
+      message: `Error retrieving file versions: ${error instanceof Error ? error.message : String(error)}`,
+      success: false,
+    };
   }
 }

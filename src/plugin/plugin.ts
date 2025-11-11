@@ -3,13 +3,10 @@ import {
   ClientQueryType,
   MessageSourceName,
   ClientMessage,
-  AddImageQueryPayload,
-  DrawShapeQueryPayload,
   PluginResponseMessage,
 } from '../types/types';
 
-import { handleDrawShape } from './drawHandlers';
-import { handleGetProjectData, handleGetUserData, handleAddImage, getCurrentPage, getAvailableFonts } from './mainHandlers';
+import { getFileVersions } from './mainHandlers';
 
 console.log('AI Agent Chat Plugin loaded successfully!')
 
@@ -28,7 +25,7 @@ penpot.on('themechange', (newTheme: string) => {
 });
 
 penpot.ui.onMessage(async (message: ClientMessage) => {
-  const { type, messageId, payload, source } = message;
+  const { type, messageId, source } = message;
 
   if (source !== MessageSourceName.Client) {
     return ;
@@ -37,28 +34,8 @@ penpot.ui.onMessage(async (message: ClientMessage) => {
   let responseMessage: PluginResponseMessage;
 
   switch (type) {
-    case ClientQueryType.DRAW_SHAPE:
-      responseMessage = handleDrawShape(payload as DrawShapeQueryPayload);
-      break;
-
-    case ClientQueryType.ADD_IMAGE:
-      responseMessage = await handleAddImage(payload as AddImageQueryPayload);
-      break;
-
-    case ClientQueryType.GET_USER_DATA:
-      responseMessage = handleGetUserData();
-      break;
-
-    case ClientQueryType.GET_PROJECT_DATA:
-      responseMessage = handleGetProjectData();
-      break;
-
-    case ClientQueryType.GET_AVAILABLE_FONTS:
-      responseMessage = getAvailableFonts();
-      break;
-
-    case ClientQueryType.GET_CURRENT_PAGE:
-      responseMessage = getCurrentPage();
+    case ClientQueryType.GET_FILE_VERSIONS:
+      responseMessage = await getFileVersions();
       break;
 
     default:

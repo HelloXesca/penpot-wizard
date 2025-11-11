@@ -4,7 +4,7 @@ import { ClientQueryType, DrawShapeQueryPayload, MessageSourceName, PenpotShapeT
 import { PathShapeProperties, PenpotShapeProperties, TextShapeProperties } from '@/types/shapeTypes';
 
 function setParamsToShape(shape: Shape, params: PenpotShapeProperties) {
-  const { backgroundImage, parentId, color, width, height, lineHeight, ...rest } = params;
+  const { backgroundImage, parentId, color, width, height, ...rest } = params;
   
   if (color || backgroundImage) {
     const fills: Fill[] = [];
