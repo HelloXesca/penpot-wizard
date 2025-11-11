@@ -1,4 +1,5 @@
 import {
+  AddImagePayload,
   AddImageQueryPayload,
   ClientQueryType,
   GetProjectDataPayload,
