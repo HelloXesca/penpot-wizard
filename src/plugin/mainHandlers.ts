@@ -28,84 +28,51 @@ export function updateCurrentSelection(ids: string[]) {
 // Export currentSelectionIds for access from plugin.ts
 export { currentSelectionIds };
 
-// Helper function to get current selection shapes safely
-function getCurrentSelectionShapes(): Shape[] {
-  console.log('🔍 getCurrentSelectionShapes called, currentSelectionIds:', currentSelectionIds);
+// SAFE SELECTION ACCESS PATTERN
+// =============================
+// This function should ONLY be called by tools when they are actually
+// performing an action, not for general selection querying.
+// Never use this for AI consumption or serialization.
+export function getSelectionForAction(): Shape[] {
+  console.log('🔍 getSelectionForAction called - safe for action-performing tools only');
 
-  // First, always try to get fresh selection data to ensure we don't miss anything
-  let freshSelection: Shape[] = [];
   try {
-    const directSel = (penpot as any).selection as Shape[];
+    // Only access selection when actually performing an action
+    const directSel = (penpot as unknown as { selection: Shape[] }).selection;
     if (directSel && Array.isArray(directSel) && directSel.length > 0) {
-      console.log(`✅ Found ${directSel.length} shapes via direct selection`);
-      freshSelection = directSel;
-      // Update our tracked selection for future use
-      const ids = directSel.map((shape: Shape) => shape?.id).filter((id: string | undefined): id is string => id !== undefined && typeof id === 'string');
-      if (ids.length > 0) {
-        console.log('📝 Updating tracked selection from fresh data:', ids);
-        currentSelectionIds = ids;
-      }
+      console.log(`✅ Found ${directSel.length} shapes for action`);
+      return directSel;
     }
-  } catch (directError) {
-    console.warn('❌ Direct selection access failed:', directError);
+  } catch (error) {
+    console.warn('❌ Selection access failed:', error);
   }
 
-  // If we got fresh selection, use it
-  if (freshSelection.length > 0) {
-    console.log(`✅ Returning ${freshSelection.length} shapes from fresh selection`);
-    return freshSelection;
-  }
-
-  // Fallback: use tracked selection IDs if fresh selection failed
-  if (currentSelectionIds && currentSelectionIds.length > 0) {
-    console.log('⚠️ Using tracked selection IDs as fallback:', currentSelectionIds);
-
-    try {
-      const currentPage = penpot.currentPage;
-      if (!currentPage) {
-        console.log('❌ No current page found');
-        return [];
-      }
-
-      const shapes: Shape[] = [];
-      for (const id of currentSelectionIds) {
-        try {
-          const shape = currentPage.getShapeById(id);
-          if (shape) {
-            console.log(`✅ Found shape ${id}:`, shape.name || shape.id);
-            shapes.push(shape);
-          } else {
-            console.log(`❌ Shape ${id} not found on page`);
-          }
-        } catch (error) {
-          console.warn(`❌ Could not find shape with ID ${id}:`, error);
-        }
-      }
-
-      if (shapes.length > 0) {
-        console.log(`✅ Returning ${shapes.length} shapes from tracked IDs`);
-        return shapes;
-      }
-    } catch (pageError) {
-      console.warn('❌ Error accessing current page:', pageError);
-    }
-  }
-
-  console.log('❌ No selection found via any method');
+  console.log('❌ No selection available for action');
   return [];
+}
+
+// Check if selection exists (safe utility)
+export function hasValidSelection(): boolean {
+  try {
+    const selection = (penpot as unknown as { selection: Shape[] }).selection;
+    return selection && Array.isArray(selection) && selection.length > 0;
+  } catch (error) {
+    console.warn('❌ Error checking selection validity:', error);
+    return false;
+  }
 }
 
 // Safely checks if there are selected shapes available
 export function hasSelection(): PluginResponseMessage {
   try {
-    const shapes = getCurrentSelectionShapes();
-    const count = shapes.length;
+    const hasSelection = hasValidSelection();
+    const count = hasSelection ? 1 : 0; // We don't know exact count without accessing selection
 
     return {
       ...pluginResponse,
       type: ClientQueryType.GET_USER_DATA,
       success: true,
-      message: count > 0 ? `Found ${count} selected item(s)` : 'No selection',
+      message: hasSelection ? 'Selection exists' : 'No selection',
       payload: { name: '', id: '', count } as unknown as GetProjectDataPayload
     };
   } catch (error) {
