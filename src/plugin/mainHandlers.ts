@@ -1,11 +1,11 @@
 import {
-  AddImagePayload,
   AddImageQueryPayload,
   ClientQueryType,
   GetProjectDataPayload,
   MessageSourceName,
   PluginResponseMessage,
 } from "../types/types";
+import type { Shape } from '@penpot/plugin-types';
 
 const pluginResponse: PluginResponseMessage = {
   source: MessageSourceName.Plugin,
@@ -14,6 +14,109 @@ const pluginResponse: PluginResponseMessage = {
   message: '',
   success: true,
 };
+
+// Global variable to store current selection IDs (updated by plugin.ts)
+let currentSelectionIds: string[] = [];
+
+// Function to update selection IDs from plugin.ts
+export function updateCurrentSelection(ids: string[]) {
+  currentSelectionIds = ids;
+  console.log('Selection updated to:', ids);
+}
+
+// Export currentSelectionIds for access from plugin.ts
+export { currentSelectionIds };
+
+// Helper function to get current selection shapes safely
+function getCurrentSelectionShapes(): Shape[] {
+  console.log('🔍 getCurrentSelectionShapes called, currentSelectionIds:', currentSelectionIds);
+
+  // First, always try to get fresh selection data to ensure we don't miss anything
+  let freshSelection: Shape[] = [];
+  try {
+    const directSel = (penpot as any).selection as Shape[];
+    if (directSel && Array.isArray(directSel) && directSel.length > 0) {
+      console.log(`✅ Found ${directSel.length} shapes via direct selection`);
+      freshSelection = directSel;
+      // Update our tracked selection for future use
+      const ids = directSel.map((shape: Shape) => shape?.id).filter((id: string | undefined): id is string => id !== undefined && typeof id === 'string');
+      if (ids.length > 0) {
+        console.log('📝 Updating tracked selection from fresh data:', ids);
+        currentSelectionIds = ids;
+      }
+    }
+  } catch (directError) {
+    console.warn('❌ Direct selection access failed:', directError);
+  }
+
+  // If we got fresh selection, use it
+  if (freshSelection.length > 0) {
+    console.log(`✅ Returning ${freshSelection.length} shapes from fresh selection`);
+    return freshSelection;
+  }
+
+  // Fallback: use tracked selection IDs if fresh selection failed
+  if (currentSelectionIds && currentSelectionIds.length > 0) {
+    console.log('⚠️ Using tracked selection IDs as fallback:', currentSelectionIds);
+
+    try {
+      const currentPage = penpot.currentPage;
+      if (!currentPage) {
+        console.log('❌ No current page found');
+        return [];
+      }
+
+      const shapes: Shape[] = [];
+      for (const id of currentSelectionIds) {
+        try {
+          const shape = currentPage.getShapeById(id);
+          if (shape) {
+            console.log(`✅ Found shape ${id}:`, shape.name || shape.id);
+            shapes.push(shape);
+          } else {
+            console.log(`❌ Shape ${id} not found on page`);
+          }
+        } catch (error) {
+          console.warn(`❌ Could not find shape with ID ${id}:`, error);
+        }
+      }
+
+      if (shapes.length > 0) {
+        console.log(`✅ Returning ${shapes.length} shapes from tracked IDs`);
+        return shapes;
+      }
+    } catch (pageError) {
+      console.warn('❌ Error accessing current page:', pageError);
+    }
+  }
+
+  console.log('❌ No selection found via any method');
+  return [];
+}
+
+// Safely checks if there are selected shapes available
+export function hasSelection(): PluginResponseMessage {
+  try {
+    const shapes = getCurrentSelectionShapes();
+    const count = shapes.length;
+
+    return {
+      ...pluginResponse,
+      type: ClientQueryType.GET_USER_DATA,
+      success: true,
+      message: count > 0 ? `Found ${count} selected item(s)` : 'No selection',
+      payload: { name: '', id: '', count } as unknown as GetProjectDataPayload
+    };
+  } catch (error) {
+    console.warn('Error checking selection:', error);
+    return {
+      ...pluginResponse,
+      type: ClientQueryType.GET_USER_DATA,
+      success: false,
+      message: 'Error checking selection',
+    };
+  }
+}
 
 export function handleGetUserData(): PluginResponseMessage {
   if (penpot.currentUser) {

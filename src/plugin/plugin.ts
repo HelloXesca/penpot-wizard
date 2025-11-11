@@ -7,11 +7,55 @@ import {
   DrawShapeQueryPayload,
   PluginResponseMessage,
 } from '../types/types';
+import type { Shape } from '@penpot/plugin-types';
 
 import { handleDrawShape } from './drawHandlers';
-import { handleGetProjectData, handleGetUserData, handleAddImage, getCurrentPage, getAvailableFonts } from './mainHandlers';
+import { handleGetProjectData, handleGetUserData, handleAddImage, getCurrentPage, getAvailableFonts, updateCurrentSelection } from './mainHandlers';
 
 console.log('AI Agent Chat Plugin loaded successfully!')
+
+// Listen for selection changes
+penpot.on('selectionchange', (selectedIds: string[]) => {
+  console.log('🔍 Selection change event fired with IDs:', selectedIds);
+  try {
+    // Defensive check: ensure selectedIds is an array of strings
+    if (Array.isArray(selectedIds)) {
+      const validIds = selectedIds.filter(id => typeof id === 'string' && id.length > 0);
+      console.log('✅ Filtered valid IDs:', validIds);
+      updateCurrentSelection(validIds);
+    } else {
+      console.warn('❌ Selection change event received invalid data:', selectedIds);
+      updateCurrentSelection([]);
+    }
+  } catch (error) {
+    console.warn('❌ Error in selection change handler:', error);
+    updateCurrentSelection([]);
+  }
+});
+
+// Initial selection will be captured by the selectionchange listener when user makes selections
+console.log('Plugin loaded - selection tracking active');
+
+// Try to capture initial selection on plugin load (safe way with timeout)
+setTimeout(() => {
+  try {
+    console.log('🔍 Checking for initial selection...');
+    const directSel = (penpot as unknown as { selection: Shape[] }).selection;
+    if (directSel && Array.isArray(directSel) && directSel.length > 0) {
+      const initialIds = directSel
+        .map((shape) => shape?.id)
+        .filter((id): id is string => typeof id === 'string' && id.length > 0);
+      if (initialIds.length > 0) {
+        console.log('📝 Capturing initial selection:', initialIds);
+        updateCurrentSelection(initialIds);
+      }
+    } else {
+      console.log('ℹ️ No initial selection found');
+    }
+  } catch (error) {
+    console.warn('⚠️ Could not capture initial selection:', error);
+  }
+}, 100); // Shorter timeout for more responsive initial capture
 
 // Open the plugin UI with current theme
 penpot.ui.open("AI Penpot Wizard", `?theme=${penpot.theme}`, {
