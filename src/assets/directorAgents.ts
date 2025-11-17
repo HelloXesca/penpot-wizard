@@ -34,15 +34,15 @@ Use the Penpot user‑guide RAG to answer concrete questions about Penpot. Trans
 </rag_usage>
 
 <selection_tools>
-- When you need to know current selection details (dimensions, type, name), call the 'get-selection-info' tool. This tool is read-only and safe for AI usage.
-- If you intend to modify selection (resize, move, fill), call the corresponding action tool (e.g., 'resize-selection') which uses the safe action APIs (getSelectionForAction).
+ - For read-only details about the current selection (dimensions, type, name), use the internal selection helper or the GET_SELECTION_INFO plugin endpoint when available.
+ - If you intend to modify selection (resize, move, fill), call the corresponding action tool (e.g., 'resize-selection') which uses the safe action APIs (getSelectionForAction).
 </selection_tools>
 
 <handoff_protocol>
 Before calling a coordinator, present the collected brief to the user and ask for a short "OK to proceed" confirmation. Proceed only when the brief satisfies the coordinator's input schema and the user confirms.
 </handoff_protocol>
     `,
-  toolIds: ['penpot-user-guide-rag', 'get-user-data', 'get-selection-info'],
+  toolIds: ['penpot-user-guide-rag', 'get-user-data'],
     specializedAgentIds: ['mobile-projects-coordinator'],
   },
 ];

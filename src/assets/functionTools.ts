@@ -52,19 +52,8 @@ export const functionTools: FunctionTool[] = [
       return response;
     },
   },
-  {
-    id: "get-selection-info",
-    name: "getSelectionInfo",
-    description: `
-      Get detailed information about the currently selected shapes in Penpot.
-      Returns properties like dimensions, position, type, and other attributes for each selected shape.
-      This is useful for understanding what shapes are selected before performing operations.
-    `,
-    inputSchema: z.object({}),
-    function: async () => {
-      const response = await sendMessageToPlugin(ClientQueryType.GET_SELECTION_INFO, undefined);
-      return response;
-    },
-  },
+  // NOTE: get-selection-info originally provided read-only selection info to the AI.
+  // In this branch we keep only the read-only helper; the AI-facing function tool will be
+  // added in a future branch. (This keeps this branch minimal and additive for infra.)
 ];
 
