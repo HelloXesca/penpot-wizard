@@ -24,6 +24,7 @@ export enum ClientQueryType {
   GET_CURRENT_PAGE = 'GET_CURRENT_PAGE',
   DRAW_SHAPE = 'DRAW_SHAPE',
   ADD_IMAGE = 'ADD_IMAGE',
+  GET_SELECTION_INFO = 'GET_SELECTION_INFO',
 }
 
 export enum PenpotShapeType {
@@ -50,6 +51,25 @@ export interface AddImageQueryPayload {
   name: string;
   data: Uint8Array;
   mimeType: string;
+}
+
+export type GetSelectionInfoQueryPayload = Record<string, never>;
+
+export interface SelectionInfoItem {
+  id: string;
+  name?: string;
+  type: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  rotation?: number;
+  opacity?: number;
+}
+
+export interface GetSelectionInfoResponsePayload {
+  selectionCount: number;
+  selectedObjects: SelectionInfoItem[];
 }
 
 export type ClientQueryPayload = DrawShapeQueryPayload | AddImageQueryPayload;
@@ -93,7 +113,7 @@ export interface GetCurrentPagePayload {
   shapes: Shape[];
 }
 
-export type PluginResponsePayload = GetUserDataPayload | GetProjectDataPayload | GetAvailableFontsPayload | GetCurrentPagePayload | DrawShapeResponsePayload | AddImagePayload;
+export type PluginResponsePayload = GetUserDataPayload | GetProjectDataPayload | GetAvailableFontsPayload | GetCurrentPagePayload | DrawShapeResponsePayload | AddImagePayload | GetSelectionInfoResponsePayload;
 
 // Theme type definition
 export type Theme = 'light' | 'dark';

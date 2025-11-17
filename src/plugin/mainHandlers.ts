@@ -1,11 +1,13 @@
 import {
   AddImagePayload,
   AddImageQueryPayload,
+  GetSelectionInfoQueryPayload,
   ClientQueryType,
   GetProjectDataPayload,
   MessageSourceName,
   PluginResponseMessage,
 } from "../types/types";
+import { readSelectionInfo } from './selectionHelpers';
 import type { Shape } from '@penpot/plugin-types';
 
 const pluginResponse: PluginResponseMessage = {
@@ -154,6 +156,43 @@ export function getCurrentPage(): PluginResponseMessage {
       shapes: penpot.currentPage?.findShapes({}) || [],
     },
   };
+}
+
+// Thin compatibility wrapper — use readSelectionInfo for new code
+export function getSelectionInfo() {
+  return readSelectionInfo();
+}
+
+export async function getSelectionInfoTool(_payload: GetSelectionInfoQueryPayload): Promise<PluginResponseMessage> {
+  try {
+    const selectedObjects = readSelectionInfo();
+
+    if (selectedObjects.length === 0) {
+      return {
+        ...pluginResponse,
+        type: ClientQueryType.GET_SELECTION_INFO,
+        success: false,
+        message: 'No shapes are currently selected. Please select one or more shapes first.',
+      };
+    }
+
+    return {
+      ...pluginResponse,
+      type: ClientQueryType.GET_SELECTION_INFO,
+      message: `Found ${selectedObjects.length} selected shape${selectedObjects.length > 1 ? 's' : ''}`,
+      payload: {
+        selectionCount: selectedObjects.length,
+        selectedObjects,
+      },
+    };
+  } catch (error) {
+    return {
+      ...pluginResponse,
+      type: ClientQueryType.GET_SELECTION_INFO,
+      success: false,
+      message: `Error reading selection information: ${error instanceof Error ? error.message : String(error)}`,
+    };
+  }
 }
 
 export async function handleAddImage(payload: AddImageQueryPayload) : Promise<PluginResponseMessage> {

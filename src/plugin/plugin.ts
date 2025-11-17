@@ -4,13 +4,14 @@ import {
   MessageSourceName,
   ClientMessage,
   AddImageQueryPayload,
+  GetSelectionInfoQueryPayload,
   DrawShapeQueryPayload,
   PluginResponseMessage,
 } from '../types/types';
 import type { Shape } from '@penpot/plugin-types';
 
 import { handleDrawShape } from './drawHandlers';
-import { handleGetProjectData, handleGetUserData, handleAddImage, getCurrentPage, getAvailableFonts, updateCurrentSelection } from './mainHandlers';
+import { handleGetProjectData, handleGetUserData, handleAddImage, getCurrentPage, getAvailableFonts, updateCurrentSelection, getSelectionInfoTool } from './mainHandlers';
 
 console.log('AI Agent Chat Plugin loaded successfully!')
 
@@ -103,6 +104,10 @@ penpot.ui.onMessage(async (message: ClientMessage) => {
 
     case ClientQueryType.GET_CURRENT_PAGE:
       responseMessage = getCurrentPage();
+      break;
+
+    case ClientQueryType.GET_SELECTION_INFO:
+      responseMessage = await getSelectionInfoTool(payload as unknown as GetSelectionInfoQueryPayload);
       break;
 
     default:
