@@ -52,8 +52,5 @@ export const functionTools: FunctionTool[] = [
       return response;
     },
   },
-  // NOTE: get-selection-info originally provided read-only selection info to the AI.
-  // In this branch we keep only the read-only helper; the AI-facing function tool will be
-  // added in a future branch. (This keeps this branch minimal and additive for infra.)
 ];
 

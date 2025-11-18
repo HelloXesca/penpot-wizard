@@ -11,7 +11,14 @@ import {
 import type { Shape } from '@penpot/plugin-types';
 
 import { handleDrawShape } from './drawHandlers';
-import { handleGetProjectData, handleGetUserData, handleAddImage, getCurrentPage, getAvailableFonts, getSelectionInfoTool } from './mainHandlers';
+import { 
+  handleGetProjectData,
+  handleGetUserData, 
+  handleAddImage, 
+  getCurrentPage, 
+  getAvailableFonts, 
+  getSelectionInfoTool 
+} from './mainHandlers';
 import { updateCurrentSelection } from './actionSelection';
 
 console.log('AI Agent Chat Plugin loaded successfully!')

@@ -1,5 +1,4 @@
 import {
-  AddImagePayload,
   AddImageQueryPayload,
   GetSelectionInfoQueryPayload,
   ClientQueryType,

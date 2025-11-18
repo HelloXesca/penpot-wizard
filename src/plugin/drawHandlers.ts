@@ -4,7 +4,10 @@ import { ClientQueryType, DrawShapeQueryPayload, MessageSourceName, PenpotShapeT
 import { PathShapeProperties, PenpotShapeProperties, TextShapeProperties } from '@/types/shapeTypes';
 
 function setParamsToShape(shape: Shape, params: PenpotShapeProperties) {
-  const { backgroundImage, parentId, color, width, height, lineHeight, ...rest } = params;
+  const { backgroundImage, parentId, color, width, height, 
+    lineHeight, 
+  //NOTE: @Axel why is there a linting error for lineHeight? 
+    ...rest } = params;
   
   if (color || backgroundImage) {
     const fills: Fill[] = [];
