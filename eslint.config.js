@@ -49,8 +49,9 @@ export default defineConfig([
         argsIgnorePattern: '^_'
       }],
       '@typescript-eslint/no-explicit-any': 'warn',
-      // Restricted imports for selection safety
-      // NOTE: This rule set is intentionally targeted via overrides below to prevent
+// NOTE: @axel please review and determine if this is neccessary and sufficent: 
+    // Restricted imports for selection safety
+      // This rule set is intentionally targeted via overrides below to prevent
       // UI/agent code from importing action-only or plugin-internal helpers that
       // should only be used from the plugin endpoints. Keep these guarded to
       // reduce risk of selection-related crashes.
