@@ -1041,6 +1041,15 @@ penpot.ui.onMessage((message: any) => {
 }
 ```
 
+### Selection safety (read-only vs action-only)
+
+We use a small selection safety system to avoid Penpot selection-related crashes and keep agent tools safe:
+- read-only helper `readSelectionInfo()` — returns serialized selection properties and is safe for UI/agents to call (GET_SELECTION_INFO endpoint).
+- action-only helper `actionSelection.getSelectionForAction()` — used only inside plugin action handlers when mutating shapes; UI code should never import this directly.
+- The plugin exposes read endpoints (GET_SELECTION_INFO) for UI and read-only workflows and action endpoints (RESIZE, APPLY_FILL, etc.) for mutations; tools should follow "read-first, act-later" so the UI can show dimensions before the plugin performs any change.
+
+This separation prevents JavaFX selection race conditions and makes it safe for AI tools to query selection data without causing side effects.
+
 ### Available Plugin APIs
 
 The plugin has access to the full Penpot Plugin API:
