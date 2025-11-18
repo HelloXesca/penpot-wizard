@@ -1,7 +1,9 @@
 /**
- * Safe, read-only selection helper
+// NOTE: READ-ONLY selection helper - safely returns selection info:
  * - Returns a plain, serializable array of selection info for the currently selected shapes.
- * - Must NOT be used to perform any modifications.
+ * - READ-ONLY: Must NOT be used to perform any modifications. This helper MUST NOT be used by action-performing code.
+ * - IMPORTANT: UI/asset code and director agents should call the read-only GET_SELECTION_INFO plugin endpoint
+ *   rather than importing this helper directly. That keeps mutation paths centralized and avoids selection race conditions.
  * - This file intentionally does not modify or import action-performing tools.
  */
 import { SelectionInfoItem } from '../types/types';
