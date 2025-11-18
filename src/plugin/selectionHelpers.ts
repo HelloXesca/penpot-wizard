@@ -4,6 +4,8 @@
  * - Must NOT be used to perform any modifications.
  * - This file intentionally does not modify or import action-performing tools.
  */
+import { SelectionInfoItem } from '../types/types';
+
 export interface SelectionInfoItemLocal {
   id: string;
   name?: string;
@@ -16,7 +18,7 @@ export interface SelectionInfoItemLocal {
   opacity?: number;
 }
 
-export function readSelectionInfo(): SelectionInfoItemLocal[] {
+export function readSelectionInfo(): SelectionInfoItem[] {
   console.log('📊 readSelectionInfo called - safe read-only selection access');
 
   try {
@@ -29,7 +31,7 @@ export function readSelectionInfo(): SelectionInfoItemLocal[] {
 
     // Only read properties; do not mutate. This helper must not trigger selection mutation.
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const info = (selection as any[]).map((shape: any) => ({
+  const info: SelectionInfoItem[] = (selection as any[]).map((shape: any) => ({
       id: String(shape.id ?? ''),
       name: shape.name ?? undefined,
       type: shape.type ?? 'unknown',
