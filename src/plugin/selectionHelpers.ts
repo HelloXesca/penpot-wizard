@@ -25,7 +25,16 @@ export function readSelectionInfo(): SelectionInfoItem[] {
 
   try {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const selection = (penpot as any).selection ?? (penpot.currentPage as any)?.getSelectedShapes?.();
+    let selection = (penpot as any).selection;
+    // If penpot.selection exists but is empty, prefer page.getSelectedShapes() when available.
+    try {
+      const pageFallback = (penpot.currentPage as any)?.getSelectedShapes?.();
+      if ((!selection || !Array.isArray(selection) || selection.length === 0) && Array.isArray(pageFallback) && pageFallback.length > 0) {
+        selection = pageFallback;
+      }
+    } catch {
+      // non-fatal - fall back to selection as captured
+    }
     if (!selection || !Array.isArray(selection) || selection.length === 0) {
       console.log('❌ No selection available for info reading');
       return [];
