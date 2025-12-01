@@ -65,6 +65,10 @@ export interface SelectionInfoItem {
   height: number;
   rotation?: number;
   opacity?: number;
+  locked?: boolean; // Whether the shape is locked (cannot be moved/edited)
+  blocked?: boolean; // Whether the shape is blocked (additional lock state)
+  proportionLock?: boolean; // Whether aspect ratio is locked during resize
+  guides?: any[]; // For debugging board guides
 }
 
 export interface GetSelectionInfoResponsePayload {

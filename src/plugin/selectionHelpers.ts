@@ -52,6 +52,11 @@ export function readSelectionInfo(): SelectionInfoItem[] {
       height: typeof shape.height === 'number' ? shape.height : 0,
       rotation: typeof shape.rotation === 'number' ? shape.rotation : undefined,
       opacity: typeof shape.opacity === 'number' ? shape.opacity : undefined,
+      locked: typeof shape.locked === 'boolean' ? shape.locked : undefined,
+      blocked: typeof shape.blocked === 'boolean' ? shape.blocked : undefined,
+      proportionLock: typeof shape.proportionLock === 'boolean' ? shape.proportionLock : 
+                      typeof shape.keepAspectRatio === 'boolean' ? shape.keepAspectRatio : undefined,
+      guides: shape.type === 'board' ? shape.guides : undefined,
     }));
 
     console.log(`✅ Read info for ${info.length} selected shapes`);
