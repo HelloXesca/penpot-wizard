@@ -1,12 +1,12 @@
+
 import { pathCommandsToSvgString } from './utils';
 import { Board, Fill, Shape, Text } from '@penpot/plugin-types';
 import { ClientQueryType, DrawShapeQueryPayload, MessageSourceName, PenpotShapeType, PluginResponseMessage } from '../types/types';
 import { PathShapeProperties, PenpotShapeProperties, TextShapeProperties } from '@/types/shapeTypes';
 
 function setParamsToShape(shape: Shape, params: PenpotShapeProperties) {
-  const { backgroundImage, parentId, color, width, height, 
-    lineHeight, 
-  //NOTE: @Axel why is there a linting error for lineHeight? 
+  const { backgroundImage, parentId, color, width, height,
+    // lineHeight removed per review comment
     ...rest } = params;
   
   if (color || backgroundImage) {
