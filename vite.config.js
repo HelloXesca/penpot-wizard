@@ -18,6 +18,9 @@ export default defineConfig({
     }),
     nodePolyfills({ include: ['stream', 'util'] }),
   ],
+  define: {
+    'import.meta.env.VITE_STANDALONE_MODE': JSON.stringify(process.env.VITE_STANDALONE_MODE || 'false'),
+  },
   build: {
     emptyOutDir: false,
   },

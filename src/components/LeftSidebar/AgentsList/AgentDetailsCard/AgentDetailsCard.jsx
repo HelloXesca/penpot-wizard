@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ChevronDownIcon, ChevronRightIcon, PencilIcon, TrashIcon } from "@heroicons/react/24/outline";
+import { AgentIcon } from "@/utils/agentIcons";
 import AgentDetailsContent from "./AgentDetailsContent/AgentDetailsContent";
 import styles from "./AgentDetailsCard.module.css";
 
@@ -17,6 +18,7 @@ function AgentDetailsCard({ agent, onEdit, onDelete }) {
           className={styles.agentHeaderButton}
           onClick={toggleExpanded}
         >
+          <AgentIcon iconName={agent?.icon} className={styles.agentListIcon} aria-hidden />
           <div className={styles.agentInfo}>
             <div className={styles.agentNameRow}>
               <h4 className={styles.agentName}>{agent.name}</h4>

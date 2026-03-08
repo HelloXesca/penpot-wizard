@@ -5,7 +5,7 @@ import {
   ChevronRightIcon,
   PlusIcon,
 } from "@heroicons/react/24/outline";
-import { $toolsData } from "@/stores/toolsStore";
+import { $userSelectableTools } from "@/stores/toolsStore";
 import { toJSONSchema } from "zod";
 import SchemaVisor from "@/components/LeftSidebar/AgentsList/SchemaVisor/SchemaVisor";
 import styles from "./Tools.module.css";
@@ -14,8 +14,8 @@ function Tools() {
   const [expandedTools, setExpandedTools] = useState({});
   const [toolSchemas, setToolSchemas] = useState({});
 
-  // Get tools data from the store
-  const tools = useStore($toolsData);
+  // Get tools data from the store (excludes system agent tools)
+  const tools = useStore($userSelectableTools);
 
   // Convert schemas when tools change
   useEffect(() => {

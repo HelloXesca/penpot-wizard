@@ -1,5 +1,6 @@
 import ReactMarkdown from 'react-markdown'
 import ToolCallDetails from './ToolCallDetails/ToolCallDetails'
+import AgentBadge from './AgentBadge/AgentBadge'
 import styles from './ChatMessages.module.css'
 
 /**
@@ -16,6 +17,8 @@ function StreamingMessageView({ message }) {
 
   return (
     <div className={`${styles.message} ${styles.assistant}`}>
+      {/* Show agent badge for streaming assistant messages */}
+      {message.agentId && <AgentBadge agentId={message.agentId} />}
       {/* Show tool calls above the message */}
       {message.toolCalls && message.toolCalls.length > 0 && (
         <div className={styles.toolCallsContainer}>

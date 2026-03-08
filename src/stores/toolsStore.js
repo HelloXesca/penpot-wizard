@@ -1,11 +1,17 @@
-import { atom } from 'nanostores';
+import { atom, computed } from 'nanostores';
 import { tool } from 'ai';
-import { tools } from '@/assets/tools';
+import { tools } from '@/assets/tools/index.js';
+import { AGENT_TOOL_IDS } from '@/assets/tools/agentsTools';
 
 let toolsInitialized = false;
 
 // Base atom for tools data
 export const $toolsData = atom(tools);
+
+/** Tools available for user selection (excludes system agent tools) */
+export const $userSelectableTools = computed($toolsData, (toolsData) =>
+  toolsData.filter((t) => !AGENT_TOOL_IDS.includes(t.id))
+);
 
 // Derived functions for getters
 export const getToolById = (toolId) => {

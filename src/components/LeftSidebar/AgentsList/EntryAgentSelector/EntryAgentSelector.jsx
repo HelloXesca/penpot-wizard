@@ -1,13 +1,14 @@
 import { useStore } from "@nanostores/react";
-import { $directorAgentsData, $activeDirectorAgent, setActiveDirectorAgent } from "@/stores/directorAgentsStore";
+import { $agentsData, $activeAgent, setActiveAgent } from "@/stores/agentsStore";
+import { getAgentIconComponent } from "@/utils/agentIcons";
 import styles from "./EntryAgentSelector.module.css";
 
 function EntryAgentSelector() {
-  const directorAgentsData = useStore($directorAgentsData);
-  const activeDirectorAgent = useStore($activeDirectorAgent);
+  const agentsData = useStore($agentsData);
+  const activeAgentId = useStore($activeAgent);
 
   const handleEntryAgentChange = (agentId) => {
-    setActiveDirectorAgent(agentId);
+    setActiveAgent(agentId);
   };
 
   return (
@@ -16,19 +17,26 @@ function EntryAgentSelector() {
         <label htmlFor="entry-agent" className={styles.label}>
           Entry Agent <span className={styles.required}>*</span>
         </label>
-        <select
-          id="entry-agent"
-          value={activeDirectorAgent || ""}
-          onChange={(e) => handleEntryAgentChange(e.target.value)}
-          className={styles.select}
-        >
-          <option value="">Select a director agent...</option>
-          {directorAgentsData.map((agent) => (
-            <option key={agent.id} value={agent.id}>
-              {agent.name}
-            </option>
-          ))}
-        </select>
+        <div className={styles.selectWrapper}>
+          {activeAgentId && (() => {
+            const agent = agentsData.find((a) => a.id === activeAgentId);
+            const AgentIcon = getAgentIconComponent(agent?.icon);
+            return <AgentIcon className={styles.selectIcon} aria-hidden />;
+          })()}
+          <select
+            id="entry-agent"
+            value={activeAgentId || ""}
+            onChange={(e) => handleEntryAgentChange(e.target.value)}
+            className={styles.select}
+          >
+            <option value="">Select an agent...</option>
+            {agentsData.map((agent) => (
+              <option key={agent.id} value={agent.id}>
+                {agent.name}
+              </option>
+            ))}
+          </select>
+        </div>
       </div>
     </div>
   );

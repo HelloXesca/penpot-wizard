@@ -1,22 +1,15 @@
 import { useState, useEffect } from "react";
 import { useStore } from "@nanostores/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
-import { $toolsData } from "@/stores/toolsStore";
-import { $specializedAgentsData } from "@/stores/specializedAgentsStore";
-import { $directorAgentsData } from "@/stores/directorAgentsStore";
+import { $userSelectableTools } from "@/stores/toolsStore";
 import { 
-  createUserDirectorAgent, 
-  updateUserDirectorAgent,
-  createUserSpecializedAgent, 
-  updateUserSpecializedAgent 
+  createUserAgent, 
+  updateUserAgent,
 } from "@/stores/userAgentsStore";
 import styles from "./EditAgentForm.module.css";
-import SchemaEditor from "../SchemaEditor/SchemaEditor";
 
 function EditAgentForm({ agentToEdit, onClose }) {
-  const toolsData = useStore($toolsData);
-  const specializedAgentsData = useStore($specializedAgentsData);
-  const directorAgentsData = useStore($directorAgentsData);
+  const userSelectableTools = useStore($userSelectableTools);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -24,25 +17,18 @@ function EditAgentForm({ agentToEdit, onClose }) {
     technical_name: "",
     description: "",
     prompt: "",
-    agent_type: "director", // "director" or "specialized"
-    input_schema: null,
     linked_tools: [],
-    linked_agents: [],
   });
 
   // Initialize form data when agentToEdit changes
   useEffect(() => {
     if (agentToEdit) {
-      // User-created agents already have schemas in JSON Schema format
       setFormData({
         name: agentToEdit.name || "",
         technical_name: agentToEdit.technical_name || agentToEdit.id || "",
         description: agentToEdit.description || "",
         prompt: agentToEdit.system || "",
-        agent_type: agentToEdit.type || "director",
-        input_schema: agentToEdit.inputSchema || null,
         linked_tools: agentToEdit.toolIds || [],
-        linked_agents: agentToEdit.specializedAgentIds || [],
       });
     } else {
       setFormData({
@@ -50,31 +36,16 @@ function EditAgentForm({ agentToEdit, onClose }) {
         technical_name: "",
         description: "",
         prompt: "",
-        agent_type: "director",
-        input_schema: null,
         linked_tools: [],
-        linked_agents: [],
       });
     }
   }, [agentToEdit]);
 
-  // Available tools for selection
-  const availableTools = toolsData.map(tool => ({
+  // Available tools for selection (excludes system agent tools)
+  const availableTools = userSelectableTools.map(tool => ({
     id: tool.id,
     name: tool.name,
   }));
-
-  // Available agents for delegation (specialized + director)
-  const availableAgents = [
-    ...specializedAgentsData.map(agent => ({
-      id: agent.id,
-      name: agent.name,
-    })),
-    ...directorAgentsData.map(agent => ({
-      id: agent.id,
-      name: agent.name,
-    })),
-  ];
 
   const handleInputChange = (field, value) => {
     setFormData(prev => ({
@@ -92,15 +63,6 @@ function EditAgentForm({ agentToEdit, onClose }) {
     }));
   };
 
-  const handleAgentToggle = (agentId) => {
-    setFormData(prev => ({
-      ...prev,
-      linked_agents: prev.linked_agents.includes(agentId)
-        ? prev.linked_agents.filter(id => id !== agentId)
-        : [...prev.linked_agents, agentId],
-    }));
-  };
-
   const handleSave = () => {
     if (
       formData.name &&
@@ -115,23 +77,12 @@ function EditAgentForm({ agentToEdit, onClose }) {
           description: formData.description,
           system: formData.prompt,
           toolIds: formData.linked_tools,
-          specializedAgentIds: formData.linked_agents,
-          // Schemas are already in JSON Schema format
-          inputSchema: formData.input_schema || undefined,
         };
         
-        if (formData.agent_type === "director") {
-          if (agentToEdit) {
-            updateUserDirectorAgent(agentData);
-          } else {
-            createUserDirectorAgent(agentData);
-          }
-        } else if (formData.agent_type === "specialized") {
-          if (agentToEdit) {
-            updateUserSpecializedAgent(agentData);
-          } else {
-            createUserSpecializedAgent(agentData);
-          }
+        if (agentToEdit) {
+          updateUserAgent(agentData);
+        } else {
+          createUserAgent(agentData);
         }
         
         onClose();
@@ -168,37 +119,9 @@ function EditAgentForm({ agentToEdit, onClose }) {
       <div className={styles.content}>
         <p className={styles.description}>
           {agentToEdit
-            ? "Modify the agent properties, prompt, and linked resources."
-            : "Define a new agent with its properties, prompt, and linked tools/agents."}
+            ? "Modify the agent properties, prompt, and linked tools."
+            : "Define a new agent with its properties, prompt, and linked tools."}
         </p>
-
-        <div className={styles.formGroup}>
-          <label htmlFor="agent-type" className={styles.label}>
-            Agent Type <span className={styles.required}>*</span>
-          </label>
-          <div className={styles.switchContainer}>
-            <button
-              type="button"
-              className={`${styles.switchButton} ${formData.agent_type === "director" ? styles.switchButtonActive : ""}`}
-              onClick={() => handleInputChange("agent_type", "director")}
-            >
-              Director
-            </button>
-            <button
-              type="button"
-              className={`${styles.switchButton} ${formData.agent_type === "specialized" ? styles.switchButtonActive : ""}`}
-              onClick={() => handleInputChange("agent_type", "specialized")}
-            >
-              Specialized
-            </button>
-          </div>
-          <small className={styles.helpText}>
-            {formData.agent_type === "director" 
-              ? "Director agents coordinate tasks and delegate to specialized agents"
-              : "Specialized agents handle specific tasks and can have input/output schemas"
-            }
-          </small>
-        </div>
 
         <div className={styles.formGrid}>
           <div className={styles.formGroup}>
@@ -263,23 +186,6 @@ function EditAgentForm({ agentToEdit, onClose }) {
             </small>
           </div>
 
-          {/* Schema fields for specialized agents */}
-          {formData.agent_type === "specialized" && (
-            <>
-              <div className={styles.formGroup}>
-                <SchemaEditor
-                  schema={formData.input_schema}
-                  onChange={(schema) => handleInputChange("input_schema", schema)}
-                  label="Input Schema (Optional)"
-                />
-                <small className={styles.helpText}>
-                  Define the expected input structure for this specialized agent
-                </small>
-              </div>
-
-            </>
-          )}
-
           <div className={styles.formGroup}>
             <label className={styles.label}>Linked Tools</label>
             <div className={styles.selectionGrid}>
@@ -297,26 +203,6 @@ function EditAgentForm({ agentToEdit, onClose }) {
             </div>
             <small className={styles.helpText}>
               Select which tools this agent can use
-            </small>
-          </div>
-
-          <div className={styles.formGroup}>
-            <label className={styles.label}>Linked Agents</label>
-            <div className={styles.selectionGrid}>
-              {availableAgents.map((agent) => (
-                <label key={agent.id} className={styles.selectionItem}>
-                  <input
-                    type="checkbox"
-                    checked={formData.linked_agents.includes(agent.id)}
-                    onChange={() => handleAgentToggle(agent.id)}
-                    className={styles.checkbox}
-                  />
-                  <span className={styles.selectionLabel}>{agent.name}</span>
-                </label>
-              ))}
-            </div>
-            <small className={styles.helpText}>
-              Select which agents this agent can delegate tasks to
             </small>
           </div>
         </div>

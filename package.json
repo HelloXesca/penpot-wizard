@@ -5,7 +5,7 @@
   "type": "module",
   "license": "MIT",
   "scripts": {
-    "dev": "vite",
+    "dev": "VITE_STANDALONE_MODE=true vite",
     "dev:penpot": "vite build -c vite.config.plugin.js && NODE_ENV='development' vite build --watch",
     "build": "vite build -c vite.config.plugin.js && vite build",
     "lint": "eslint .",

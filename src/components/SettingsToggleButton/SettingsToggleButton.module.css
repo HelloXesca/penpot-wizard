@@ -1,0 +1,28 @@
+.button {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 1100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background-color: var(--accent-primary, #6366f1);
+  color: var(--background-primary, #ffffff);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.2s ease, transform 0.2s ease;
+}
+
+.button:hover {
+  background-color: var(--accent-secondary, #4f46e5);
+  transform: scale(1.05);
+}
+
+.icon {
+  width: 24px;
+  height: 24px;
+}

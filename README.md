@@ -29,7 +29,7 @@ An AI-powered chat assistant plugin for Penpot that uses a multi-agent architect
 
 Penpot Wizard is a plugin for [Penpot](https://penpot.app) that brings AI assistance into your design workflow. It includes:
 
-- **Multi-Agent Architecture**: Director agents orchestrate coordinators, specialized agents, and tools
+- **Multi-Agent Architecture**: Director agents orchestrate capability agents and tools
 - **AI Integration**: Supports OpenAI and OpenRouter
 - **RAG System**: Search Penpot documentation and design styles
 - **Direct Drawing**: Create shapes, paths, text, boards, components, and icons in Penpot
@@ -87,7 +87,7 @@ For installation instructions, visit **[aipenpotwizard.app/install](https://aipe
 
 ## Architecture
 
-The system has three layers: the **Plugin** (runs in Penpot, creates shapes, accesses data), the **UI** (React app in an iframe), and **Stores** (nanostores for state). Director agents orchestrate tools, capability agents, coordinators, and specialized agents. Communication between UI and plugin uses `postMessage`.
+The system has three layers: the **Plugin** (runs in Penpot, creates shapes, accesses data), the **UI** (React app in an iframe), and **Stores** (nanostores for state). Director agents orchestrate tools and capability agents. Communication between UI and plugin uses `postMessage`.
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for diagrams and details.
 
@@ -97,7 +97,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for diagrams and details.
 
 ### Agents
 
-There are four agent types: **Director** (main orchestrator, e.g. PenpotWizard), **Capability** (domain experts in `src/assets/agents/`: designer, planner, drawer, component-builder, prototyper, illustrator, modifier), **Coordinator** (project orchestration), and **Specialized** (legacy domain experts). Agent definitions are consolidated in `src/assets/agents/agents.js`. Image generation and placement are handled by tools (`generate-image`, `set-image-from-url`) in `imageTools.js`. Agents use `toolIds` and `specializedAgentIds` to compose tools and sub-agents.
+Agent type: **Director** (main orchestrator, e.g. PenpotWizard). Agent definitions are consolidated in `src/assets/agents/agents.js`. Image generation and placement are handled by tools (`generate-image`, `set-image-from-url`) in `imageTools.js`. Directors use `toolIds` to compose tools.
 
 See [docs/AGENTS_GUIDE.md](docs/AGENTS_GUIDE.md) for how to create custom agents.
 

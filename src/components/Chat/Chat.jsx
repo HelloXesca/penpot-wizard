@@ -1,10 +1,14 @@
 import { useEffect } from 'react'
-import Header from './Header/Header'
 import ChatMessages from './ChatMessages/ChatMessages'
 import Footer from './Footer/Footer'
 import StartPage from './StartPage/StartPage'
+import SettingsPanel from '@/components/SettingsPanel/SettingsPanel'
+import ConversationHistoryPanel from '@/components/ConversationHistoryPanel/ConversationHistoryPanel'
 import StreamingCancelDialog from '@/components/StreamingCancelDialog/StreamingCancelDialog'
 import { $activeConversationId, loadActiveConversation } from '@/stores/activeConversationStore'
+import { $isSettingsPanelOpen, closeSettingsPanel, openSettingsPanel } from '@/stores/settingsPanelStore'
+import { $isConversationHistoryPanelOpen, closeConversationHistoryPanel } from '@/stores/conversationHistoryPanelStore'
+import { $isConnected } from '@/stores/settingsStore'
 import { $showCancelDialog, $streamingMessage, isStreaming, setPendingAction } from '@/stores/streamingMessageStore'
 import { handleContinueStreaming, handleCancelStreaming } from '@/stores/conversationActionsStore'
 import { useStore } from '@nanostores/react'
@@ -24,6 +28,9 @@ function Chat() {
   const activeConversationId = useStore($activeConversationId)
   const showCancelDialog = useStore($showCancelDialog)
   const streamingMessage = useStore($streamingMessage)
+  const isSettingsPanelOpen = useStore($isSettingsPanelOpen)
+  const isConversationHistoryPanelOpen = useStore($isConversationHistoryPanelOpen)
+  const isConnected = useStore($isConnected)
 
   // Load messages when component mounts if there's an active conversation ID
   useEffect(() => {
@@ -31,6 +38,13 @@ function Chat() {
       loadActiveConversation(activeConversationId)
     }
   }, [activeConversationId])
+
+  // Auto-open settings panel when config is not complete (no valid API connection)
+  useEffect(() => {
+    if (!isConnected) {
+      openSettingsPanel()
+    }
+  }, [isConnected])
 
   useEffect(() => {
     if (showCancelDialog && !streamingMessage) {
@@ -58,7 +72,6 @@ function Chat() {
 
   return (
     <div className={styles.chat}>
-      <Header />
       {!activeConversationId ? (
           <StartPage />
         ) : (
@@ -67,6 +80,18 @@ function Chat() {
       }
       <Footer />
       
+      {/* Settings panel */}
+      <SettingsPanel
+        isOpen={isSettingsPanelOpen}
+        onClose={closeSettingsPanel}
+      />
+
+      {/* Conversation history panel */}
+      <ConversationHistoryPanel
+        isOpen={isConversationHistoryPanelOpen}
+        onClose={closeConversationHistoryPanel}
+      />
+
       {/* Streaming cancellation dialog */}
       {showCancelDialog && (
         <StreamingCancelDialog

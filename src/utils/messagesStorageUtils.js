@@ -97,7 +97,7 @@ export const cleanupOldestConversations = (options = {}) => {
   const metadata = $conversationsMetadata.get();
   const candidates = metadata
     .filter((conv) => conv.id !== excludeConversationId)
-    .sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+    .sort((a, b) => (a.createdAt?.getTime?.() ?? 0) - (b.createdAt?.getTime?.() ?? 0));
 
   let cleanedCount = 0;
 

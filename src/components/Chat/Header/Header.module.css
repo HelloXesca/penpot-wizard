@@ -1,17 +1,24 @@
 .header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 1001;
   background-color: var(--background-tertiary);
   color: var(--foreground-primary);
-  padding: 20px 30px;
+  padding: 16px 24px;
   border-bottom: 1px solid var(--background-quaternary);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.08);
   display: flex;
   gap: 12px;
   justify-content: space-between;
   align-items: center;
-  position: relative;
 }
 
 .leftSection {
+  flex: 1;
+  min-width: 0;
   display: flex;
   align-items: center;
 }
@@ -19,265 +26,61 @@
 .rightSection {
   display: flex;
   align-items: center;
-  gap: 12px;
-}
-
-.agentSection {
-  position: relative;
-}
-
-.agentBadge {
-  display: flex;
-  align-items: center;
   gap: 8px;
-  padding: 8px 16px;
-  background-color: var(--accent-primary);
-  color: var(--background-primary);
-  border: none;
-  border-radius: 20px;
-  font-weight: 500;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
 }
 
-.agentBadge:hover {
-  background-color: var(--accent-secondary);
-  transform: translateY(-1px);
-}
-
-.agentName {
+.sectionTitle {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
-}
-
-.dropdownIcon {
-  width: 16px;
-  height: 16px;
-  transition: transform 0.2s ease;
-}
-
-.agentBadge:hover .dropdownIcon {
-  transform: rotate(180deg);
-}
-
-.noAgent {
-  padding: 8px 16px;
-  color: var(--foreground-secondary);
-  font-size: 14px;
-  font-style: italic;
-}
-
-.dropdown {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  margin-top: 8px;
-  background-color: var(--background-primary);
-  border: 1px solid var(--background-quaternary);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  min-width: 250px;
-  overflow: hidden;
-}
-
-.dropdownItem {
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  background: none;
+  color: var(--foreground-primary);
   text-align: left;
-  cursor: pointer;
-  transition: background-color 0.2s ease;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
 }
 
-.dropdownItem:hover {
-  background-color: var(--background-tertiary);
-}
-
-.dropdownItem.active {
-  background-color: var(--accent-primary);
-  color: var(--background-primary);
-}
-
-.dropdownItemName {
-  font-weight: 600;
-  font-size: 14px;
-  margin-bottom: 4px;
-}
-
-.dropdownItemDesc {
-  font-size: 12px;
-  color: var(--foreground-secondary);
-  line-height: 1.3;
-}
-
-.dropdownItem.active .dropdownItemDesc {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.newConversationBtn {
+.iconBtn {
   display: flex;
-  flex: 0 0 40px;
   align-items: center;
   justify-content: center;
+  width: 40px;
   height: 40px;
-  background-color: var(--accent-primary);
-  color: var(--background-primary);
+  padding: 0;
   border: none;
+  background-color: var(--background-primary);
+  color: var(--foreground-secondary);
+  border: 1px solid var(--background-quaternary);
   border-radius: 50%;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.newConversationBtn:hover:not(:disabled) {
+.iconBtn:hover {
+  background-color: var(--background-tertiary);
+  color: var(--foreground-primary);
+  border-color: var(--accent-primary);
+}
+
+.iconBtn:first-of-type:not(:only-of-type) + .iconBtn + .iconBtn {
+  /* New conversation button - accent style */
+}
+
+.rightSection .iconBtn:nth-child(3) {
+  background-color: var(--accent-primary);
+  color: var(--background-primary);
+  border-color: var(--accent-primary);
+}
+
+.leftSection .iconBtn:nth-child(3):hover {
   background-color: var(--accent-secondary);
+  border-color: var(--accent-secondary);
   transform: scale(1.05);
-}
-
-.newConversationBtn:disabled {
-  background-color: var(--background-quaternary);
-  color: var(--foreground-secondary);
-  cursor: not-allowed;
 }
 
 .icon {
   width: 20px;
   height: 20px;
-}
-
-.historySection {
-  position: relative;
-}
-
-.historyBtn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background-color: var(--background-primary);
-  color: var(--foreground-primary);
-  border: 1px solid var(--background-quaternary);
-  border-radius: 20px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.historyBtn:hover {
-  background-color: var(--background-tertiary);
-  border-color: var(--accent-primary);
-}
-
-.historyText {
-  font-weight: 500;
-}
-
-.historyDropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 8px;
-  background-color: var(--background-primary);
-  border: 1px solid var(--background-quaternary);
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  min-width: 300px;
-  max-width: 400px;
-  overflow: hidden;
-}
-
-.historyItem {
-  display: flex;
-  align-items: stretch;
-  width: 100%;
-  background: none;
-  transition: background-color 0.2s ease;
-  border-bottom: 1px solid var(--background-quaternary);
-}
-
-.historyItem:last-child {
-  border-bottom: none;
-}
-
-.historyItem:hover {
-  background-color: var(--background-tertiary);
-}
-
-.historyItem.active {
-  background-color: var(--accent-primary);
-  color: var(--background-primary);
-}
-
-.historyItemButton {
-  flex: 1;
-  padding: 12px 16px;
-  border: none;
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  color: inherit;
-}
-
-.historyItemSummary {
-  font-size: 14px;
-  font-weight: 500;
-  margin-bottom: 4px;
-  line-height: 1.3;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-}
-
-.historyItemDate {
-  font-size: 12px;
-  color: var(--foreground-secondary);
-}
-
-.historyItem.active .historyItemDate {
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.historyDeleteBtn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  margin-right: 8px;
-  border: none;
-  background: none;
-  color: var(--foreground-secondary);
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background-color 0.2s ease, color 0.2s ease;
-}
-
-.historyDeleteBtn:hover {
-  background-color: var(--background-tertiary);
-  color: var(--foreground-primary);
-}
-
-.historyItem.active .historyDeleteBtn {
-  color: var(--background-primary);
-}
-
-.historyItem.active .historyDeleteBtn:hover {
-  background-color: rgba(255, 255, 255, 0.15);
-}
-
-.deleteIcon {
-  width: 18px;
-  height: 18px;
-}
-
-.overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 999;
-  background: transparent;
 }

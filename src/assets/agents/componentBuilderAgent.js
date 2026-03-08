@@ -8,9 +8,14 @@ import { z } from 'zod';
 export const componentBuilderAgent = {
   id: 'component-builder',
   name: 'ComponentBuilder',
-  description: `
-    Use this tool to create Penpot components.
-  `,
+  icon: 'CubeIcon',
+  description:
+    'Creates reusable Penpot components from the Planner specifications. Use tokens to apply styles. Output feeds the Drawer for clone-shape.',
+
+  greeting: {
+    en: "I'm ComponentBuilder. I create reusable Penpot components from the Planner's specs. Ready to build your component library.",
+    es: "Soy ComponentBuilder. Creo componentes reutilizables de Penpot a partir de las especificaciones del Planner. Listo para construir tu biblioteca de componentes.",
+  },
 
   inputSchema: z.object({
     components: z.string().describe('Components list: [{ name, content }]. Each content is compact text describing what to draw.'),
@@ -19,38 +24,30 @@ export const componentBuilderAgent = {
   }),
 
   system: `
-  <role>
-    In Penpot, components allow reusing visual elements across different views.
-    You are an expert tool for creating Penpot components.
-    Use tokens to apply styles to components.
-  </role>
+<who_you_are>
+You are ComponentBuilder, the agent that creates reusable Penpot components. In Penpot, components allow reusing visual elements across different views. Use tokens to apply styles to components.
+</who_you_are>
 
-  <workflow>
-    1. Call get-current-page. Look for a board named "COMPONENTS". If it does not exist, create it with create-board: {
-      name "COMPONENTS",
-      parentId: (root frame id from get-current-page),
-      x: -1100,
-      y: 0,
-      width: 1000,
-      height: 800,
-      horizontalSizing: 'fix',
-      verticalSizing: 'auto',
-      flex: { dir: 'row', rowGap: 20, columnGap: 20, wrap: 'wrap', verticalPadding: 20, horizontalPadding: 20, }
-    }.
-    2. Create the components recursively, one after another.
-    3. Return a markdown report of the components created.
-  </workflow>
+<language_policy>
+- Always reply in the user's language for the conversation.
+- Internally (tools, data structures), use English.
+</language_policy>
 
-  <component-creation-workflow>
-    1. Create a container board with the component name and parentId the COMPONENTS board you created in the previous step. If needed, use a flex or grid layout to organize the shapes.
-    2. Create the component shapes using the board id from step 1 as parentId.
-    3. Convert the container board to component using convert-to-component.
-  </component-creation-workflow>
+<tool_mentality>
+- Call get-tokens-sets to list available token names. Apply tokens when creating shapes or use apply-tokens after creation.
+- Use create-board, create-rectangle, create-ellipse, create-text, create-path, then convert-to-component.
+</tool_mentality>
 
-  <output>
-    Your final message MUST be a markdown string with a list of the components created.
-  </output>
-  `,
+<workflow>
+1. Call get-current-page. Look for a board named "COMPONENTS". If it does not exist, create it with create-board: { name: "COMPONENTS", parentId: (root frame id), x: -1100, y: 0, width: 1000, height: 800, horizontalSizing: 'fix', verticalSizing: 'auto', flex: { dir: 'row', rowGap: 20, columnGap: 20, wrap: 'wrap', verticalPadding: 20, horizontalPadding: 20 } }.
+2. For each component: create a container board with the component name (parentId: COMPONENTS board), create shapes with parentId, convert the board to component with convert-to-component.
+3. Return a markdown report of the components created.
+</workflow>
+
+<output_clarity>
+Your final message MUST be a markdown string with a list of the components created. Include component names and any relevant details for the Drawer.
+</output_clarity>
+`,
 
   toolIds: [
     'get-current-page',
@@ -76,6 +73,4 @@ export const componentBuilderAgent = {
     'delete-shape',
     'convert-to-component',
   ],
-
-  specializedAgentIds: ['illustrator'],
 };

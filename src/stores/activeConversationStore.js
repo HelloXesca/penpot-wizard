@@ -44,8 +44,9 @@ export const $activeConversationFull = computed(
 
     const conversation = {
       id: conversationMetadata.id,
-      directorAgentId: conversationMetadata.directorAgentId,
+      agentId: conversationMetadata.agentId,
       messages,
+      title: conversationMetadata.title,
       summary: conversationMetadata.summary,
       createdAt: conversationMetadata.createdAt
     };
@@ -79,7 +80,7 @@ export const clearActiveConversation = () => {
 /**
  * Adds a message to the active conversation
  * Updates both the atom and localStorage
- * @param message - Message without id and timestamp (will be generated)
+ * @param message - Message without id and timestamp (will be generated). Assistant messages may include agentId.
  * @returns The new message ID, or undefined if no active conversation
  */
 export const addMessageToActive = (

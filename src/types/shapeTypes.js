@@ -51,7 +51,7 @@ export const Text = ShapeBase.extend({
   fontSize: z.number(),
   fontWeight: z.number(),
   fontStyle: z.enum(['normal', 'italic', 'mixed']),
-  lineHeight: z.number().default(1).describe('separation between lines of text, in pixels'),
+  lineHeight: z.number().default(1).describe('separation between lines of text, in pixels, normally is 1, more than 10 is too much'),
   letterSpacing: z.number(),
   textTransform: z.enum(['uppercase', 'capitalize', 'lowercase', 'mixed']),
   textDecoration: z.enum(['underline', 'line-through', 'mixed']),

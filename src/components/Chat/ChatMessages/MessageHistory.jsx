@@ -1,6 +1,7 @@
 import { memo } from 'react'
 import ReactMarkdown from 'react-markdown'
 import ToolCallDetails from './ToolCallDetails/ToolCallDetails'
+import AgentBadge from './AgentBadge/AgentBadge'
 import styles from './ChatMessages.module.css'
 
 /**
@@ -18,6 +19,10 @@ const MessageHistory = memo(({ messages }) => {
             key={message.id}
             className={`${styles.message} ${styles[message.role]}`}
           >
+            {/* Show agent badge for assistant messages */}
+            {message.role === 'assistant' && message.agentId && (
+              <AgentBadge agentId={message.agentId} />
+            )}
             {/* Show tool calls above the message */}
             {message.toolCalls && message.toolCalls.length > 0 && (
               <div className={styles.toolCallsContainer}>

@@ -147,29 +147,3 @@ export async function searchOramaDb(query, options = {}) {
     score: hit.score
   }));
 }
-
-// --- Backward compatibility (deprecated, use initializeOramaDb + searchOramaDb) ---
-
-export async function initializeDataBase(dbFile, embeds = 'orama') {
-  return initializeOramaDb(dbFile, embeds);
-}
-
-export async function searchDataBase(query, limit = 10, dbInstance, embeds = 'orama') {
-  return searchOramaDb(query, {
-    dbInstance,
-    limit,
-    similarity: 0.85,
-    embeddingModel: embeds
-  });
-}
-
-export async function initializeDataBaseV2(dbFile) {
-  return initializeOramaDb(dbFile, 'openai');
-}
-
-export async function searchDataBaseV2(query, options) {
-  return searchOramaDb(query, {
-    ...options,
-    embeddingModel: 'openai'
-  });
-}

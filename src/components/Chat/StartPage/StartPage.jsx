@@ -5,35 +5,38 @@ import {
   trySetActiveConversation,
   deleteConversation
 } from '@/stores/conversationActionsStore'
-import { $activeDirectorAgent } from '@/stores/directorAgentsStore'
+import { $activeAgent, $combinedAgents } from '@/stores/agentsStore'
 import { $conversationsMetadata } from '@/stores/conversationsMetadataStore'
 import { isStreaming, setPendingAction } from '@/stores/streamingMessageStore'
+import { getAgentIconComponent } from '@/utils/agentIcons'
 import styles from './StartPage.module.css'
 
 /**
  * StartPage Component
- * Uses metadata-only approach for efficient conversation listing
+ * 1. Title: "Elige el agente"
+ * 2. Full list of agents (name + description) - click to start conversation
+ * 3. On agent click: create conversation, system "saluda y preséntate", stream response
  */
 function StartPage() {
-  const activeDirectorAgent = useStore($activeDirectorAgent)
+  const activeAgentId = useStore($activeAgent)
+  const agentsData = useStore($combinedAgents)
   const conversationsMetadata = useStore($conversationsMetadata)
-  const directorConversations = activeDirectorAgent
+  const agentConversations = activeAgentId
     ? conversationsMetadata
-        .filter(conversation => conversation.directorAgentId === activeDirectorAgent)
-        .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime())
+        .filter(conversation => conversation.agentId === activeAgentId)
+        .sort((a, b) => (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0))
     : []
-  
-  const handleStartConversation = async () => {
-    if (activeDirectorAgent) {
-      await tryCreateNewConversation(activeDirectorAgent)
-    }
+
+  const handleAgentClick = async (agentId) => {
+    await tryCreateNewConversation(agentId)
   }
   
   const handleLoadConversation = (conversationId) => {
     trySetActiveConversation(conversationId)
   }
 
-  const handleDeleteConversation = (conversationId) => {
+  const handleDeleteConversation = (conversationId, e) => {
+    e.stopPropagation()
     if (isStreaming()) {
       setPendingAction({
         type: 'delete_conversation',
@@ -41,67 +44,70 @@ function StartPage() {
       })
       return
     }
-
     deleteConversation(conversationId)
   }
 
   return (
     <div className={styles.startPageContainer}>
-      <div className={styles.emptyState}>
-        <div className={styles.emptyContent}>
-          <h2 className={styles.emptyTitle}>Start a Conversation</h2>
-          <p className={styles.emptyDescription}>
-            Begin chatting with your AI assistant to get help with your tasks.
-          </p>
-          <button 
-            className={styles.startButton}
-            onClick={handleStartConversation}
-            disabled={!activeDirectorAgent}
-          >
-            Start Conversation
-          </button>
-        </div>
-        
-        {/* Conversation History - using metadata only */}
-        {directorConversations.length > 0 && (
-          <div className={styles.historySection}>
-            <h3 className={styles.historyTitle}>Recent Conversations</h3>
-            <div className={styles.conversationGrid}>
-              {directorConversations.map(conversation => (
-                <div 
-                  key={conversation.id}
-                  className={styles.conversationCard}
-                  onClick={() => handleLoadConversation(conversation.id)}
-                >
-                  <button
-                    className={styles.deleteConversationButton}
-                    onClick={(event) => {
-                      event.stopPropagation()
-                      handleDeleteConversation(conversation.id)
-                    }}
-                    title="Delete conversation"
-                    aria-label="Delete conversation"
-                  >
-                    <TrashIcon className={styles.deleteConversationIcon} />
-                  </button>
-                  <div className={styles.conversationSummary}>
-                    {conversation.summary || 'New conversation'}
-                  </div>
-                  <div className={styles.conversationDate}>
-                    {conversation.createdAt.toLocaleDateString()}
-                  </div>
-                  <div className={styles.conversationMessages}>
-                    {conversation.messageCount} messages
-                  </div>
+      <div className={styles.mainContent}>
+        <h2 className={styles.pageTitle}>Elige el agente</h2>
+        <div className={styles.agentsGrid}>
+          {agentsData.map((agent) => {
+            const AgentIcon = getAgentIconComponent(agent.icon)
+            return (
+              <button
+                key={agent.id}
+                className={styles.agentCard}
+                onClick={() => handleAgentClick(agent.id)}
+              >
+                <AgentIcon className={styles.agentCardIcon} aria-hidden />
+                <div className={styles.agentCardContent}>
+                  <h3 className={styles.agentCardName}>{agent.name}</h3>
+                  <p className={styles.agentCardDescription}>
+                    {agent.description}
+                  </p>
                 </div>
-              ))}
-            </div>
-          </div>
-        )}
+              </button>
+            )
+          })}
+        </div>
       </div>
+      
+      {/* Conversation History */}
+      {agentConversations.length > 0 && (
+        <div className={styles.historySection}>
+          <h3 className={styles.historyTitle}>Conversaciones recientes</h3>
+          <div className={styles.conversationGrid}>
+            {agentConversations.map((conversation) => (
+              <div 
+                key={conversation.id}
+                className={styles.conversationCard}
+                onClick={() => handleLoadConversation(conversation.id)}
+              >
+                <button
+                  className={styles.deleteConversationButton}
+                  onClick={(e) => handleDeleteConversation(conversation.id, e)}
+                  title="Eliminar conversación"
+                  aria-label="Eliminar conversación"
+                >
+                  <TrashIcon className={styles.deleteConversationIcon} />
+                </button>
+                <div className={styles.conversationSummary} title={conversation.summary || undefined}>
+                  {conversation.title || conversation.summary || 'Nueva conversación'}
+                </div>
+                <div className={styles.conversationDate}>
+                  {conversation.createdAt.toLocaleDateString()}
+                </div>
+                <div className={styles.conversationMessages}>
+                  {conversation.messageCount} mensajes
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
 
 export default StartPage
-

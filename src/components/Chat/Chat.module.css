@@ -1,7 +1,8 @@
 .chat {
   display: flex;
   flex-direction: column;
-  height: 100vh;
-  margin-left: 40px; /* Always account for icons sidebar */
+  flex: 1;
+  min-height: 0;
+  padding-top: var(--header-height);
   background-color: var(--background-primary);
 }

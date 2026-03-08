@@ -22,7 +22,7 @@ vi.mock('@/stores/settingsStore', () => ({
   $openrouterApiKey: { get: () => 'test-api-key' }
 }))
 
-import { ragTools } from '../ragTools'
+import { ragTools } from '../tools/ragTools'
 
 const ORAMA_SCHEMA = {
   id: 'string',

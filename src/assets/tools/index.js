@@ -10,6 +10,7 @@ import { toolsReorderShapes } from './toolsReorderShapes';
 import { toolsTokens } from './toolsTokens';
 import { ragTools } from './ragTools';
 import { iconsTool } from './iconsTool';
+import { agentsTools } from './agentsTools';
 
 export const tools = [
   ...functionTools,
@@ -24,4 +25,5 @@ export const tools = [
   ...toolsTokens,
   ...ragTools,
   ...iconsTool,
+  ...agentsTools,
 ];

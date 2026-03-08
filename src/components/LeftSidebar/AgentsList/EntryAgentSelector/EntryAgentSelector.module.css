@@ -34,8 +34,24 @@
   font-weight: 600;
 }
 
+.selectWrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.selectIcon {
+  position: absolute;
+  left: 0.75rem;
+  width: 1rem;
+  height: 1rem;
+  color: var(--accent-primary);
+  pointer-events: none;
+}
+
 .select {
   padding: 0.5rem 0.75rem;
+  padding-left: 2.25rem;
   border: 1px solid var(--background-quaternary);
   border-radius: 0.375rem;
   font-size: 0.875rem;
@@ -44,6 +60,7 @@
   transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
   font-family: inherit;
   cursor: pointer;
+  width: 100%;
 }
 
 .select:focus {

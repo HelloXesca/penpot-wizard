@@ -33,6 +33,24 @@ let isAborting = false;
 export const $pendingAction = atom(null);
 
 /**
+ * Pending handoff: when a tool aborts to hand off to another agent.
+ * { agentId, handoffContent } - when set, abort handler should execute handoff instead of adding cancellation message
+ */
+let pendingHandoff = null;
+
+export const setPendingHandoff = (payload) => {
+  pendingHandoff = payload;
+};
+
+export const getPendingHandoff = () => pendingHandoff;
+
+export const clearPendingHandoff = () => {
+  const p = pendingHandoff;
+  pendingHandoff = null;
+  return p;
+};
+
+/**
  * Whether to show the cancel dialog
  */
 export const $showCancelDialog = atom(false);
@@ -40,11 +58,13 @@ export const $showCancelDialog = atom(false);
 /**
  * Starts a new streaming message
  * @param messageId - The ID for the new message
+ * @param agentId - The ID of the agent sending the message
  */
-export const startStreaming = (messageId) => {
+export const startStreaming = (messageId, agentId) => {
   const newStreamingMessage = {
     id: messageId,
     role: 'assistant',
+    agentId: agentId ?? null,
     content: '',
     isStreaming: true
   };
@@ -291,7 +311,7 @@ export const resetAbortFlag = () => {
 
 /**
  * Gets the current AbortSignal
- * Used by specialized agents to share the same abort signal
+ * Used by agents to share the same abort signal
  * @returns The current AbortSignal or undefined if none exists
  */
 export const getAbortSignal = () => {

@@ -1,85 +1,38 @@
 import { persistentAtom } from '@nanostores/persistent';
 
-// Persistent atoms for user-created agents
-export const $userDirectorAgents = persistentAtom('userDirectorAgents', [], {
+export const $userAgents = persistentAtom('userAgents', [], {
   encode: JSON.stringify,
   decode: JSON.parse,
 });
 
-export const $userSpecializedAgents = persistentAtom('userSpecializedAgents', [], {
-  encode: JSON.stringify,
-  decode: JSON.parse,
-});
-
-// Director Agents CRUD functions
-export const createUserDirectorAgent = (agent) => {
-  const currentAgents = $userDirectorAgents.get();
-  // Check if agent with same id already exists
+export const createUserAgent = (agent) => {
+  const currentAgents = $userAgents.get();
   if (currentAgents.some(a => a.id === agent.id)) {
-    throw new Error(`Director agent with id "${agent.id}" already exists`);
+    throw new Error(`Agent with id "${agent.id}" already exists`);
   }
-  $userDirectorAgents.set([...currentAgents, agent]);
+  $userAgents.set([...currentAgents, agent]);
 };
 
-export const updateUserDirectorAgent = (agent) => {
-  const currentAgents = $userDirectorAgents.get();
-  const updatedAgents = currentAgents.map(a => 
+export const updateUserAgent = (agent) => {
+  const currentAgents = $userAgents.get();
+  const updatedAgents = currentAgents.map(a =>
     a.id === agent.id ? agent : a
   );
-  
-  // Check if agent was found and updated
+
   if (!currentAgents.some(a => a.id === agent.id)) {
-    throw new Error(`Director agent with id "${agent.id}" not found`);
+    throw new Error(`Agent with id "${agent.id}" not found`);
   }
-  
-  $userDirectorAgents.set(updatedAgents);
+
+  $userAgents.set(updatedAgents);
 };
 
-export const deleteUserDirectorAgent = (id) => {
-  const currentAgents = $userDirectorAgents.get();
+export const deleteUserAgent = (id) => {
+  const currentAgents = $userAgents.get();
   const filteredAgents = currentAgents.filter(a => a.id !== id);
-  
-  // Check if agent was found and removed
+
   if (filteredAgents.length === currentAgents.length) {
-    throw new Error(`Director agent with id "${id}" not found`);
+    throw new Error(`Agent with id "${id}" not found`);
   }
-  
-  $userDirectorAgents.set(filteredAgents);
-};
 
-// Specialized Agents CRUD functions
-export const createUserSpecializedAgent = (agent) => {
-  const currentAgents = $userSpecializedAgents.get();
-  // Check if agent with same id already exists
-  if (currentAgents.some(a => a.id === agent.id)) {
-    throw new Error(`Specialized agent with id "${agent.id}" already exists`);
-  }
-  $userSpecializedAgents.set([...currentAgents, agent]);
+  $userAgents.set(filteredAgents);
 };
-
-export const updateUserSpecializedAgent = (agent) => {
-  const currentAgents = $userSpecializedAgents.get();
-  const updatedAgents = currentAgents.map(a => 
-    a.id === agent.id ? agent : a
-  );
-  
-  // Check if agent was found and updated
-  if (!currentAgents.some(a => a.id === agent.id)) {
-    throw new Error(`Specialized agent with id "${agent.id}" not found`);
-  }
-  
-  $userSpecializedAgents.set(updatedAgents);
-};
-
-export const deleteUserSpecializedAgent = (id) => {
-  const currentAgents = $userSpecializedAgents.get();
-  const filteredAgents = currentAgents.filter(a => a.id !== id);
-  
-  // Check if agent was found and removed
-  if (filteredAgents.length === currentAgents.length) {
-    throw new Error(`Specialized agent with id "${id}" not found`);
-  }
-  
-  $userSpecializedAgents.set(filteredAgents);
-};
-

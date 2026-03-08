@@ -34,15 +34,16 @@ export const $conversationsMetadata = persistentAtom(
 /**
  * Creates new conversation metadata
  * Note: This only creates metadata, not the actual messages store
- * @param directorAgentId - The director agent ID
+ * @param agentId - The agent ID
  * @returns The new conversation ID
  */
-export const createConversationMetadata = (directorAgentId) => {
+export const createConversationMetadata = (agentId) => {
   const conversationId = `conv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
   const newMetadata = {
     id: conversationId,
-    directorAgentId,
+    agentId,
+    title: null,
     summary: null,
     createdAt: new Date(),
     messageCount: 0
@@ -93,15 +94,15 @@ export const getMetadataById = (conversationId) => {
 };
 
 /**
- * Gets all metadata for a specific director agent
- * @param directorAgentId - The director agent ID
+ * Gets all metadata for a specific agent
+ * @param agentId - The agent ID
  * @returns Array of metadata sorted by date (newest first)
  */
-export const getMetadataByDirector = (directorAgentId) => {
+export const getMetadataByAgent = (agentId) => {
   const metadata = $conversationsMetadata.get();
   return metadata
-    .filter(conv => conv.directorAgentId === directorAgentId)
-    .sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+    .filter(conv => conv.agentId === agentId)
+    .sort((a, b) => (b.createdAt?.getTime?.() ?? 0) - (a.createdAt?.getTime?.() ?? 0));
 };
 
 /**
@@ -126,5 +127,15 @@ export const incrementMessageCount = (conversationId) => {
  */
 export const updateSummary = (conversationId, summary) => {
   updateConversationMetadata(conversationId, { summary });
+};
+
+/**
+ * Updates the title and summary for a conversation
+ * @param conversationId - The conversation ID
+ * @param title - The title text (short, max ~6 words)
+ * @param summary - The summary text
+ */
+export const updateTitleAndSummary = (conversationId, title, summary) => {
+  updateConversationMetadata(conversationId, { title, summary });
 };
 

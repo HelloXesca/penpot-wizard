@@ -1,21 +1,24 @@
 /**
- * Agents barrel - groups all agent definitions.
- * Structure similar to tools.js.
+ * Agents barrel - groups all entry-point agent definitions from this folder.
  */
 import { penpotWizardAgent } from './penpotWizardAgent';
+import { webprojectsDirectorAgent } from './webprojectsDirectorAgent';
 import { designerAgent } from './designerAgent';
-import { plannerAgent } from './plannerAgent';
 import { drawerAgent } from './drawerAgent';
+import { modifierAgent } from './modifierAgent';
 import { componentBuilderAgent } from './componentBuilderAgent';
+import { plannerAgent } from './plannerAgent';
 import { prototyperAgent } from './prototyperAgent';
 import { illustratorAgent } from './illustratorAgent';
-import { modifierAgent } from './modifierAgent';
-import { directorAgents as oldDirectorAgents } from '@/assets/directorAgents';
-import { specializedAgents } from '@/assets/specializedAgents';
-import { coordinatorAgents } from '@/assets/coordinatorAgents';
 
-// Directors (entry points)
-export const directorAgents = [penpotWizardAgent, ...oldDirectorAgents];
-
-// Capability agents (Designer, Planner, Drawer) + legacy
-export const capabilityAgents = [designerAgent, plannerAgent, componentBuilderAgent, drawerAgent, prototyperAgent, illustratorAgent, modifierAgent, ...specializedAgents, ...coordinatorAgents];
+export const agents = [
+  penpotWizardAgent,
+  webprojectsDirectorAgent,
+  designerAgent,
+  drawerAgent,
+  modifierAgent,
+  componentBuilderAgent,
+  plannerAgent,
+  prototyperAgent,
+  illustratorAgent,
+];

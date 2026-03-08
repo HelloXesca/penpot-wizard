@@ -1,0 +1,120 @@
+.themeWrapper {
+  /* Wrapper to inherit Penpot theme variables when rendered via portal */
+}
+
+.panel {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  top: var(--header-height);
+  background-color: var(--background-primary, #ffffff);
+  color: var(--foreground-primary);
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15);
+  animation: slideUp 0.3s ease;
+}
+
+.panel.closing {
+  animation: slideDown 0.3s ease forwards;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(100%);
+  }
+}
+
+.tabs {
+  display: flex;
+  background-color: var(--background-secondary);
+  border-bottom: 1px solid var(--background-quaternary);
+  flex-shrink: 0;
+}
+
+.tab {
+  flex: 1;
+  background-color: var(--background-secondary);
+  color: var(--foreground-secondary);
+  border: none;
+  padding: 12px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  transition: background-color 0.2s ease, color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.tab.active {
+  background-color: var(--background-quaternary);
+  color: var(--foreground-primary);
+  font-weight: bold;
+}
+
+.tab:hover:not(:disabled) {
+  background-color: var(--background-quaternary);
+  color: var(--foreground-primary);
+}
+
+.tab.disabled,
+.tab:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.warningDot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--error-500);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.successDot {
+  width: 8px;
+  height: 8px;
+  background-color: var(--success-500);
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.tabContent {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.tabPanel {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px;
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease;
+  overflow-y: auto;
+}
+
+.tabPanel.active {
+  opacity: 1;
+  visibility: visible;
+}

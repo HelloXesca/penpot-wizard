@@ -1,29 +1,23 @@
 import { useState } from "react";
 import { useStore } from "@nanostores/react";
-import { $directorAgentsData } from "@/stores/directorAgentsStore";
-import { $specializedAgentsData } from "@/stores/specializedAgentsStore";
+import { $agentsData } from "@/stores/agentsStore";
 import EditAgentForm from "./EditAgentForm/EditAgentForm";
 import AgentDetailsCard from "./AgentDetailsCard/AgentDetailsCard";
 import EntryAgentSelector from "./EntryAgentSelector/EntryAgentSelector";
 import styles from "./AgentsList.module.css";
-import { deleteUserDirectorAgent, deleteUserSpecializedAgent } from "@/stores/userAgentsStore";
+import { deleteUserAgent } from "@/stores/userAgentsStore";
 
 import {
   PlusIcon,
 } from "@heroicons/react/24/outline";
 
 function AgentsList() {
-  const directorAgentsData = useStore($directorAgentsData);
-  const specializedAgentsData = useStore($specializedAgentsData);
+  const agentsDataRaw = useStore($agentsData);
 
-  // Combine all agent types for display
-  const agentsData = [
-    ...directorAgentsData.map((agent) => ({ ...agent, type: "director" })),
-    ...specializedAgentsData.map((agent) => ({
-      ...agent,
-      type: "specialized",
-    })),
-  ];
+  const agentsData = agentsDataRaw.map((agent) => ({
+    ...agent,
+    type: "agent",
+  }));
 
   const [showCreateForm, setShowCreateForm] = useState(false);
   const [editingAgent, setEditingAgent] = useState(null);
@@ -37,10 +31,8 @@ function AgentsList() {
     if (window.confirm("Are you sure you want to delete this agent?")) {
       // In real implementation, this would update the store
       console.log("Deleting agent:", agentId);
-      if (agentType === "director") {
-        deleteUserDirectorAgent(agentId);
-      } else if (agentType === "specialized") {
-        deleteUserSpecializedAgent(agentId);
+      if (agentType === "agent") {
+        deleteUserAgent(agentId);
       }
     }
   };

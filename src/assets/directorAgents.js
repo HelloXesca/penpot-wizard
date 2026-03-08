@@ -75,12 +75,6 @@ When calling StyleAdvisorCoordinator with scope "apply", include the designSyste
 </rag_usage>
     `,
     toolIds: ['penpot-user-guide-rag', 'design-styles-rag', 'get-user-data', 'get-current-page', 'get-fonts'],
-    specializedAgentIds: [
-      'print-projects-coordinator',
-      'web-projects-coordinator',
-      'mobile-projects-coordinator',
-      'style-advisor-coordinator',
-    ],
   },
   {
     id: 'test-tools-director',

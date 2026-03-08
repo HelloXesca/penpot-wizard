@@ -1,14 +1,14 @@
 import { generateText } from 'ai';
 import { createModelInstance } from '@/utils/modelUtils';
-import { getDirectorById, $activeDirectorAgent } from './directorAgentsStore';
+import { getAgentById, $activeAgent, setActiveAgent } from './agentsStore';
 
 // Metadata store
 import {
   createConversationMetadata,
   getMetadataById,
   incrementMessageCount,
-  updateSummary,
-  getMetadataByDirector
+  updateTitleAndSummary,
+  getMetadataByAgent
 } from './conversationsMetadataStore';
 
 // Active conversation store
@@ -23,6 +23,7 @@ import {
 
 // Streaming store
 import {
+  $streamingMessage,
   startStreaming,
   finalizeStreaming,
   isStreaming,
@@ -34,7 +35,9 @@ import {
   createAbortController,
   clearAbortController,
   isStreamAborting,
-  resetAbortFlag
+  resetAbortFlag,
+  getPendingHandoff,
+  clearPendingHandoff
 } from './streamingMessageStore';
 
 // Messages storage utilities
@@ -50,27 +53,8 @@ import { convertMessagesForAgent } from '@/utils/messagesForAgentUtils';
 // Streaming utilities
 import { StreamHandler } from '@/utils/streamingMessageUtils';
 
-/**
- * Welcome messages by browser language (navigator.language prefix).
- * Falls back to English when the language is not in the map.
- */
-const WELCOME_MESSAGES = {
-  en: 'Hello! How can I help you today?',
-  es: '¡Hola! ¿En qué puedo ayudarte hoy?',
-  fr: "Bonjour ! Comment puis-je vous aider aujourd'hui ?",
-  de: 'Hallo! Wie kann ich Ihnen heute helfen?',
-  pt: 'Olá! Como posso ajudá-lo hoje?',
-  it: 'Ciao! Come posso aiutarti oggi?',
-  ca: 'Hola! Com et puc ajudar avui?',
-  gl: 'Ola! Como podo axudarte hoxe?'
-};
-
-function getWelcomeMessage() {
-  const lang = (typeof navigator !== 'undefined' && navigator.language)
-    ? navigator.language.split('-')[0]
-    : 'en';
-  return WELCOME_MESSAGES[lang] ?? WELCOME_MESSAGES.en;
-}
+const GREETING_SYSTEM_MESSAGE = 'Start the conversation by greeting the user and introducing yourself.';
+const SUMMARY_UPDATE_INTERVAL = 5;
 
 /**
  * Conversation Actions Store (V2)
@@ -79,13 +63,14 @@ function getWelcomeMessage() {
  */
 
 /**
- * Creates a new conversation
- * @param directorAgentId - The director agent ID
+ * Creates a new conversation and streams the agent's greeting
+ * Adds hidden system message "Saluda al usuario y preséntate" and streams response
+ * @param agentId - The agent ID
  * @returns The new conversation ID
  */
-export const createNewConversation = async (directorAgentId) => {
+export const createNewConversation = async (agentId) => {
   // 1. Create metadata
-  const conversationId = createConversationMetadata(directorAgentId);
+  const conversationId = createConversationMetadata(agentId);
 
   // 2. Create empty messages storage
   saveMessagesToStorage(conversationId, []);
@@ -93,16 +78,26 @@ export const createNewConversation = async (directorAgentId) => {
   // 3. Load as active conversation
   loadActiveConversation(conversationId);
 
-  // 4. Add welcome message from assistant (in browser language)
-  addMessageToActive({
-    role: 'assistant',
-    content: getWelcomeMessage()
-  });
+  // 4. Set active agent (needed for streaming)
+  setActiveAgent(agentId);
 
-  // 5. Increment message count for welcome message
-  incrementMessageCount(conversationId);
+  // 5. Add system message (hidden) and stream agent's greeting
+  await addMessageAndStreamResponse('system', GREETING_SYSTEM_MESSAGE, true);
 
   return conversationId;
+};
+
+/**
+ * Navigates to the new conversation page (agent selection)
+ */
+export const goToNewConversation = () => {
+  if (isStreaming()) {
+    setPendingAction({
+      type: 'go_to_new_conversation',
+    });
+    return;
+  }
+  clearActiveConversation();
 };
 
 /**
@@ -122,56 +117,57 @@ export const setActiveConversation = (conversationId) => {
 };
 
 /**
- * Sends a user message and streams the assistant's response
- * @param text - The user's message text
+ * Internal: adds a message (user or system) and streams the assistant's response
+ * @param role - 'user' | 'system'
+ * @param text - The message text
+ * @param hidden - Whether the message should be hidden from the UI
  */
-export const sendUserMessage = async (text, hidden = false) => {
+async function addMessageAndStreamResponse(role, text, hidden = false) {
   const activeConversation = $activeConversationFull.get();
-  const activeDirectorAgent = $activeDirectorAgent.get();
+  const activeAgentId = $activeAgent.get();
 
-  if (!activeConversation || !activeDirectorAgent) {
-    console.error('No active conversation or director agent');
+  if (!activeConversation || !activeAgentId) {
+    console.error('No active conversation or agent');
     return;
   }
 
   try {
-    // 1. Add user message to active conversation
-    const userMessageId = addMessageToActive({
-      role: 'user',
+    // 1. Add message to active conversation
+    const messageId = addMessageToActive({
+      role,
       content: text,
-      hidden: hidden
+      hidden
     });
 
-    if (!userMessageId) {
-      console.error('Failed to add user message');
+    if (!messageId) {
+      console.error('Failed to add message');
       return;
     }
 
-    // Increment message count
     incrementMessageCount(activeConversation.id);
 
-    // 2. Get the director agent instance
-    const director = getDirectorById(activeDirectorAgent);
-    if (!director?.instance) {
-      console.error('Director agent not initialized');
+    // 2. Get the agent instance
+    const agent = getAgentById(activeAgentId);
+    if (!agent?.instance) {
+      console.error('Agent not initialized');
       return;
     }
 
     // 3. Generate message ID for assistant response
     const assistantMessageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
 
-    // 4. Start streaming
-    startStreaming(assistantMessageId);
+    // 4. Start streaming (pass agentId for message attribution)
+    startStreaming(assistantMessageId, activeAgentId);
 
     // 5. Create AbortController for this stream
     const abortController = createAbortController();
 
-    // 6. Prepare messages for the agent (includes toolCalls; user message already in getActiveMessages)
+    // 6. Prepare messages for the agent (includes toolCalls; message already in getActiveMessages)
     const currentMessages = getActiveMessages();
     const agentMessages = convertMessagesForAgent(currentMessages);
 
     // 7. Stream response from agent
-    const stream = await director.instance.stream({
+    const stream = await agent.instance.stream({
       messages: agentMessages,
       abortSignal: abortController.signal
     });
@@ -184,17 +180,29 @@ export const sendUserMessage = async (text, hidden = false) => {
     if (isStreamAborting()) {
       resetAbortFlag();
       clearAbortController();
-      
-      // Finalize with cancellation note
+
+      const handoff = getPendingHandoff();
+      if (handoff) {
+        clearPendingHandoff();
+        finalizeStreaming();
+        setActiveAgent(handoff.agentId);
+        return addMessageAndStreamResponse('system', handoff.handoffContent, false);
+      }
+
       const cancelMessage = finalizeStreaming();
       if (cancelMessage) {
         const messageContent = cancelMessage.content || '';
         addMessageToActive({
           role: 'assistant',
+          agentId: cancelMessage.agentId ?? activeAgentId,
           content: messageContent + '\n\n⚠️ _Cancelado por el usuario_',
           toolCalls: cancelMessage.toolCalls
         });
         incrementMessageCount(activeConversation.id);
+        const updatedMeta = getMetadataById(activeConversation.id);
+        if (updatedMeta && updatedMeta.messageCount >= SUMMARY_UPDATE_INTERVAL && updatedMeta.messageCount % SUMMARY_UPDATE_INTERVAL === 0) {
+          setTimeout(() => generateConversationSummary(activeConversation.id), 1000);
+        }
       }
       return;
     }
@@ -211,20 +219,19 @@ export const sendUserMessage = async (text, hidden = false) => {
         ? `${finalMessage.content ? `${finalMessage.content}\n\n` : ''}⚠️ ${finalMessage.error}`
         : finalMessage.content;
 
-      // Add to active conversation
       addMessageToActive({
         role: 'assistant',
+        agentId: finalMessage.agentId ?? activeAgentId,
         content,
         toolCalls: finalMessage.toolCalls
       });
 
-      // Increment message count
       incrementMessageCount(activeConversation.id);
     }
 
-    // 12. Generate summary after first exchange if not exists
-    if (!activeConversation.summary && currentMessages.length <= 2) {
-      // Wait a bit for the message to be fully added
+    // 12. Generate/update summary every 5 messages
+    const updatedMetadata = getMetadataById(activeConversation.id);
+    if (updatedMetadata && updatedMetadata.messageCount >= SUMMARY_UPDATE_INTERVAL && updatedMetadata.messageCount % SUMMARY_UPDATE_INTERVAL === 0) {
       setTimeout(() => {
         generateConversationSummary(activeConversation.id);
       }, 1000);
@@ -232,37 +239,43 @@ export const sendUserMessage = async (text, hidden = false) => {
   } catch (error) {
     console.error('Error sending message:', error);
 
-    // Clear AbortController on error
     clearAbortController();
-    
-    // Check if it was an abort
-    const wasAborting = isStreamAborting();
-    resetAbortFlag(); // Always reset the flag
 
-    // Handle AbortError (user cancelled)
-    // Check for both 'AbortError' name and message containing 'abort' or if flag was set
-    const isAborted = wasAborting || (error instanceof Error && 
-      (error.name === 'AbortError' || 
+    const wasAborting = isStreamAborting();
+    resetAbortFlag();
+
+    const isAborted = wasAborting || (error instanceof Error &&
+      (error.name === 'AbortError' ||
        error.message?.toLowerCase().includes('abort') ||
        error.message?.toLowerCase().includes('cancel')));
-    
+
     if (isAborted) {
-      // Finalize with cancellation note
+      const handoff = getPendingHandoff();
+      if (handoff) {
+        clearPendingHandoff();
+        finalizeStreaming(); // Discard current message, don't add to conversation
+        setActiveAgent(handoff.agentId);
+        return addMessageAndStreamResponse('system', handoff.handoffContent, true);
+      }
+
       const cancelMessage = finalizeStreaming();
-      
       if (cancelMessage) {
         const messageContent = cancelMessage.content || '';
         addMessageToActive({
           role: 'assistant',
+          agentId: cancelMessage.agentId ?? activeAgentId,
           content: messageContent + '\n\n⚠️ _Cancelado por el usuario_',
           toolCalls: cancelMessage.toolCalls
         });
         incrementMessageCount(activeConversation.id);
+        const updatedMeta = getMetadataById(activeConversation.id);
+        if (updatedMeta && updatedMeta.messageCount >= SUMMARY_UPDATE_INTERVAL && updatedMeta.messageCount % SUMMARY_UPDATE_INTERVAL === 0) {
+          setTimeout(() => generateConversationSummary(activeConversation.id), 1000);
+        }
       }
-      return; // Exit without showing error
+      return;
     }
 
-    // Handle real errors
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     const formattedError = `Error: ${errorMessage}`;
     setStreamingError(formattedError);
@@ -279,17 +292,67 @@ export const sendUserMessage = async (text, hidden = false) => {
     });
 
     incrementMessageCount(activeConversation.id);
+    const updatedMeta = getMetadataById(activeConversation.id);
+    if (updatedMeta && updatedMeta.messageCount >= SUMMARY_UPDATE_INTERVAL && updatedMeta.messageCount % SUMMARY_UPDATE_INTERVAL === 0) {
+      setTimeout(() => generateConversationSummary(activeConversation.id), 1000);
+    }
   }
+}
+
+/**
+ * Sends a system message. By default streams the assistant's response.
+ * @param text - The system message text
+ * @param hidden - Whether the message should be hidden from the UI
+ * @param options - { streamResponse?: boolean } When false, only adds the message (no streaming). Use when closing the current stream (e.g. handoff).
+ */
+export const sendSystemMessage = (text, hidden = false, options = {}) => {
+  const { streamResponse = true } = options;
+  if (!streamResponse) {
+    const activeConversation = $activeConversationFull.get();
+    const activeAgentId = $activeAgent.get();
+    if (!activeConversation || !activeAgentId) {
+      console.error('No active conversation or agent');
+      return;
+    }
+    const messageId = addMessageToActive({ role: 'system', content: text, hidden });
+    if (messageId) incrementMessageCount(activeConversation.id);
+    return;
+  }
+  return addMessageAndStreamResponse('system', text, hidden);
 };
 
 /**
- * Generates a summary for a conversation
+ * Sends a user message and streams the assistant's response
+ * @param text - The user's message text
+ * @param hidden - Whether the message should be hidden from the UI
+ */
+export const sendUserMessage = (text, hidden = false) =>
+  addMessageAndStreamResponse('user', text, hidden);
+
+/**
+ * Parses title and summary from AI response
+ * @param text - Raw response text
+ * @returns { title, summary } or null if parsing fails
+ */
+function parseTitleAndSummary(text) {
+  const match = text.match(/Title:\s*(.+?)\n\s*Summary:\s*([\s\S]*)/i);
+  if (match) {
+    const title = match[1].trim();
+    const summary = match[2].trim();
+    if (title && summary) return { title, summary };
+  }
+  if (text.trim()) return { title: text.trim().slice(0, 50), summary: text.trim() };
+  return null;
+}
+
+/**
+ * Generates a title and summary for a conversation
  * @param conversationId - The conversation ID
  */
 export const generateConversationSummary = async (conversationId) => {
   const metadata = getMetadataById(conversationId);
 
-  if (!metadata || metadata.summary || metadata.messageCount < 2) {
+  if (!metadata || metadata.messageCount < 2) {
     return;
   }
 
@@ -312,19 +375,32 @@ export const generateConversationSummary = async (conversationId) => {
 
     const model = createModelInstance();
 
-    // Get first few messages to generate summary
-    const firstMessages = messages.slice(0, 4);
-    const messagesText = firstMessages
+    // Use last messages for summary (more relevant for longer conversations)
+    const maxMessages = 12;
+    const messagesToSummarize = messages.length <= maxMessages
+      ? messages
+      : messages.slice(-maxMessages);
+    const messagesText = messagesToSummarize
       .map(msg => `${msg.role}: ${msg.content}`)
       .join('\n');
 
     const { text } = await generateText({
       model,
-      prompt: `Generate a brief summary (max 50 words) of this conversation:\n\n${messagesText}\n\nSummary:`
+      prompt: `Generate a brief title (max 6 words) and a brief summary (max 50 words) for this conversation.
+Format your response exactly as:
+Title: [title here]
+Summary: [summary here]
+
+Conversation:
+${messagesText}
+
+Response:`
     });
 
-    // Update metadata with summary
-    updateSummary(conversationId, text.trim());
+    const parsed = parseTitleAndSummary(text.trim());
+    if (parsed) {
+      updateTitleAndSummary(conversationId, parsed.title, parsed.summary);
+    }
   } catch (error) {
     console.error('Failed to generate conversation summary:', error);
   }
@@ -346,13 +422,13 @@ export const deleteConversation = (conversationId) => {
 };
 
 /**
- * Gets conversations for a specific director
+ * Gets conversations for a specific agent
  * Returns only metadata (lightweight)
- * @param directorAgentId - The director agent ID
+ * @param agentId - The agent ID
  * @returns Array of conversation metadata
  */
-export const getConversationsForDirector = (directorAgentId) => {
-  return getMetadataByDirector(directorAgentId);
+export const getConversationsForAgent = (agentId) => {
+  return getMetadataByAgent(agentId);
 };
 
 /**
@@ -378,18 +454,16 @@ export const trySetActiveConversation = (conversationId) => {
  * Attempts to create new conversation, checking for active streaming first
  * Returns true if created immediately, false if pending user confirmation
  */
-export const tryCreateNewConversation = async (directorAgentId) => {
+export const tryCreateNewConversation = async (agentId) => {
   if (isStreaming()) {
-    // Set pending action and show dialog
     setPendingAction({
       type: 'new_conversation',
-      data: { directorAgentId }
+      data: { agentId }
     });
     return false;
   }
-  
-  // No streaming, create immediately
-  await createNewConversation(directorAgentId);
+
+  await createNewConversation(agentId);
   return true;
 };
 
@@ -409,6 +483,8 @@ export const handleCancelStreaming = () => {
   
   // Cancel streaming if still active
   if (wasStreaming) {
+    const streamingMsg = $streamingMessage.get();
+    const agentIdForCancel = streamingMsg?.agentId ?? $activeAgent.get();
     cancelStreamingWithMessage();
     
     // Add cancellation message to the conversation where streaming was happening
@@ -419,6 +495,7 @@ export const handleCancelStreaming = () => {
       
       addMessageToActive({
         role: 'assistant',
+        agentId: agentIdForCancel ?? undefined,
         content: cancellationMessage
       });
       
@@ -445,8 +522,8 @@ export const handleCancelStreaming = () => {
         break;
       
       case 'new_conversation':
-        if (action.data?.directorAgentId) {
-          createNewConversation(action.data.directorAgentId);
+        if (action.data?.agentId) {
+          createNewConversation(action.data.agentId);
         }
         break;
       
@@ -454,6 +531,10 @@ export const handleCancelStreaming = () => {
         if (action.data?.conversationId) {
           deleteConversation(action.data.conversationId);
         }
+        break;
+      
+      case 'go_to_new_conversation':
+        clearActiveConversation();
         break;
       
       case 'reload':
